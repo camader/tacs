@@ -245,8 +245,8 @@ cdef class Vec:
         cdef int bsize = 0
         cdef np.ndarray values
         bsize = self.ptr.getBlockSize()
-        length = bsize*var.shape[0]
-        values = np.zeros(length)
+        length = var.shape[0]
+        values = np.zeros(bsize*length)
         fail = self.ptr.getValues(length, <int*>var.data, <TacsScalar*>values.data)
         if fail:
             errmsg = 'Vec: Failed on get values. Incorrect indices'
@@ -818,6 +818,7 @@ cdef class Assembler:
             element = self.ptr.getElement(num, NULL, NULL, NULL, NULL)
             nnodes = element.numNodes()
             nvars = element.numVariables()
+            compID = element.getComponentNum()
 
             # Allocate the numpy array and retrieve the internal data
             Xpt = np.zeros(3*nnodes, dtype=dtype)
@@ -830,7 +831,7 @@ cdef class Assembler:
         else:
             raise ValueError('Element index out of range')
 
-        return _init_Element(element), Xpt, vars0, dvars, ddvars
+        return _init_Element(element), Xpt, vars0, dvars, ddvars, compID
 
     def getElementNodes(self, int num):
         '''Get the node numbers associated with the given element'''

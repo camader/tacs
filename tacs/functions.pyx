@@ -7,8 +7,8 @@
 #  TACS is licensed under the Apache License, Version 2.0 (the
 #  "License"); you may not use this software except in compliance with
 #  the License.  You may obtain a copy of the License at
-#  
-#  http://www.apache.org/licenses/LICENSE-2.0 
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
 
 # distutils: language=c++
 
@@ -16,7 +16,7 @@
 from mpi4py.libmpi cimport *
 cimport mpi4py.MPI as MPI
 
-# Import numpy 
+# Import numpy
 import numpy as np
 cimport numpy as np
 
@@ -58,7 +58,7 @@ cdef class Compliance(Function):
         self.ptr = new TACSCompliance(tacs.ptr)
         self.ptr.incref()
         return
-     
+
 cdef class StructuralMass(Function):
     def __cinit__(self, Assembler tacs):
         '''
@@ -90,6 +90,9 @@ cdef class KSFailure(Function):
         elif ftype == 'pnorm-continuous':
             self.ksptr.setKSFailureType(PNORM_FAILURE_CONTINUOUS)
         return
+
+    def setLoadFactor(self, TacsScalar loadFactor):
+        self.ksptr.setLoadFactor(loadFactor)
 
     def setParameter(self, double ksparam):
         self.ksptr.setParameter(ksparam)
