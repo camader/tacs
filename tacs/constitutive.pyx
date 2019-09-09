@@ -126,6 +126,16 @@ cdef class PlaneStress(Constitutive):
         self.ptr = NULL
         return
 
+cdef class CoupledPlaneStress(Constitutive):
+    def __cinit__(self, *args, **kwargs):
+        self.ptr = NULL
+        return
+
+cdef class CoupledSolid(Constitutive):
+    def __cinit__(self, *args, **kwargs):
+        self.ptr = NULL
+        return
+    
 cdef class SimplePlaneStress(PlaneStress):
     def __cinit__(self, *args, **kwargs):
         '''

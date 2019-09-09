@@ -3,11 +3,7 @@
   Structures, a parallel finite-element code for structural and
   multidisciplinary design optimization.
 
-  Copyright (C) 2010 University of Toronto
-  Copyright (C) 2012 University of Michigan
-  Copyright (C) 2014 Georgia Tech Research Corporation
-  Additional copyright (C) 2010 Graeme J. Kennedy and Joaquim
-  R.R.A. Martins All rights reserved.
+  Copyright (C) 2018 Georgia Tech Research Corporation
 
   TACS is licensed under the Apache License, Version 2.0 (the
   "License"); you may not use this software except in compliance with
@@ -16,73 +12,38 @@
   http://www.apache.org/licenses/LICENSE-2.0
 */
 
-#ifndef TACS_KS_FAILURE_H
-#define TACS_KS_FAILURE_H
-
-/*
-  Compute the KS function in TACS
-*/
+#ifndef TACS_KS_MAT_TEMPERATURE_H
+#define TACS_KS_MAT_TEMPERATURE_H
 
 #include "TACSFunction.h"
-
+#include "KSTemperature.h"
 /*
-  The following class implements the methods from TACSFunction.h
-  necessary to calculate the KS function of either a stress or strain
-  failure criteria over the domain of some finite element model.
-
-  Each class should only ever be passed to a single instance of
-  TACS. If the KS function needs to be calculated for separate
-  instances, this should be handled by separate instances of
-  KSFailure.
-
-  The failure load is calculated using the strain-based failure
-  criteria from the base Constitutive class which requires linear and
-  constant components of the strain to determine the failure load.
-
-  The arguments to the KSFailure class are:
-
-  ksWeight:  the ks weight used in the calculation
-
-  optional arguments:
-
-  elementNums, numElements -- these specify a subdomain of the TACS
-  model over which the KS function should be calculated by passing in
-  the element numbers and number of elements in the subdomain.
-
-  note: if no subdomain is specified, the calculation takes place over
-  all the elements in the model
+  Compute the KS functional of the displacement along a given direction
 */
-class TACSKSFailure : public TACSFunction {
+class TACSKSMatTemperature : public TACSFunction {
  public:
-  enum KSFailureType { DISCRETE, CONTINUOUS,
-                       PNORM_DISCRETE, PNORM_CONTINUOUS };
-  enum KSConstitutiveFunction { FAILURE, BUCKLING };
+  /* enum KSTemperatureType { DISCRETE, CONTINUOUS, */
+  /*                          PNORM_DISCRETE, PNORM_CONTINUOUS }; */
 
-  TACSKSFailure( TACSAssembler * _tacs, double ksWeight,
-                 KSConstitutiveFunction func=FAILURE,
-                 double alpha=1.0 );
-  ~TACSKSFailure();
+  TACSKSMatTemperature( TACSAssembler *_tacs, double _ksWeight,
+			TACSKSTemperature::KSTemperatureType _ksType=TACSKSTemperature::CONTINUOUS,
+			int _nmats=1 );
+  ~TACSKSMatTemperature();
 
   // Retrieve the name of the function
   // ---------------------------------
   const char *functionName();
 
-  // Set parameters for the KS function
-  // ----------------------------------
-  void setKSFailureType( enum KSFailureType type );
-  double getParameter();
-  void setParameter( double _ksWeight );
-  void setLoadFactor( TacsScalar _loadFactor );
-
-  // Set the value of the failure offset for numerical stability
-  // -----------------------------------------------------------
-  void setMaxFailOffset( TacsScalar _maxFail ){
-    maxFail = _maxFail;
-  }
-
   // Create the function context for evaluation
   // ------------------------------------------
   TACSFunctionCtx *createFunctionCtx();
+
+  // Set the type of displacement aggregate
+  // --------------------------------------
+  void setKSDispType( TACSKSTemperature::KSTemperatureType _ksType );
+  void setNumMats( int _nmats ){
+    nmats = _nmats;
+  }
 
   // Collective calls on the TACS MPI Comm
   // -------------------------------------
@@ -106,7 +67,6 @@ class TACSKSFailure : public TACSFunction {
   // Return the value of the function
   // --------------------------------
   TacsScalar getFunctionValue();
-  TacsScalar getMaximumFailure();
 
   // State variable sensitivities
   // ----------------------------
@@ -132,34 +92,28 @@ class TACSKSFailure : public TACSFunction {
                           const TacsScalar Xpts[], const TacsScalar vars[],
                           const TacsScalar dvars[], const TacsScalar ddvars[],
                           TACSFunctionCtx *ctx );
+
  private:
-  // The type of aggregation to use
-  KSFailureType ksType;
-
-  // The constitutive function to use
-  KSConstitutiveFunction conType;
-
-  // The weight on the ks function value
-  double ksWeight;
-
-  // The integral scaling value
-  double alpha;
-
-  // Load factor applied to the strain
-  TacsScalar loadFactor;
-
-  // The maximum number of nodes/stresses in any given element
-  int maxNumNodes, maxNumStrains;
-
   // The name of the function
   static const char *funcName;
 
-  // The maximum failure value, the sum of exp(ksWeight*(f[i] - maxFail)
-  // and the value of the KS function
-  TacsScalar ksFailSum, maxFail;
+  // The value of the KS weight
+  double ksWeight;
 
-  // Used for the case when this is used to evaluate the p-norm
+  // Intermediate values in the functional evaluation
+  TacsScalar ksSum;
+  TacsScalar *maxValue;
   TacsScalar invPnorm;
+
+  // Set the type of constraint aggregate
+  TACSKSTemperature::KSTemperatureType ksType;
+
+  // The max number of nodes
+  int maxNumNodes;
+  
+  // Whether the domain is a plane stress or 3d
+  int is_2d, is_3d;
+  int nmats;
 };
 
-#endif // TACS_KS_FAILURE_H
+#endif // TACS_KS_DISPLACEMENT_H

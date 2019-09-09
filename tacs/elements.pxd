@@ -178,6 +178,18 @@ cdef extern from "TACSElementTemplates.h":
         TACS3DTraction5(int, TacsScalar, TacsScalar, TacsScalar)
         TACS3DTraction5(int, TacsScalar[], TacsScalar[], TacsScalar[])
 
+    cdef cppclass TACS3DPressureTraction2(TACSElement):
+        TACS3DPressureTraction2(int, TacsScalar)
+
+    cdef cppclass TACS3DPressureTraction3(TACSElement):
+        TACS3DPressureTraction3(int, TacsScalar)
+
+    cdef cppclass TACS3DPressureTraction4(TACSElement):
+        TACS3DPressureTraction4(int, TacsScalar)
+
+    cdef cppclass TACS3DPressureTraction5(TACSElement):
+        TACS3DPressureTraction5(int, TacsScalar)
+
     cdef cppclass TACS3DBoundingTraction2(TACSElement):
         TACS3DBoundingTraction2(int, TacsScalar, TacsScalar, TacsScalar, TacsScalar[])
         TACS3DBoundingTraction2(int, TacsScalar[], TacsScalar[], TacsScalar[], TacsScalar[])
@@ -194,7 +206,7 @@ cdef extern from "TACSElementTemplates.h":
 
     cdef cppclass MITCShell4(TACSElement):
         MITCShell4(FSDTStiffness *stiff, ElementBehaviorType type, int)
-        
+
     cdef cppclass MITCShell43(TACSElement):
         MITCShell43(FSDTStiffness *stiff, ElementBehaviorType type, int)
 
@@ -235,6 +247,153 @@ cdef extern from "TACSElementTemplates.h":
     cdef cppclass PoissonQuad5(TACSElement):
         PoissonQuad5(TacsScalar*)
         PoissonQuad5(void*, poisson_evalf)
+
+    # Declare the Plane Stress Thermoelastic Quad elements
+    cdef cppclass PSThermoQuad2(TACSElement):
+        PSThermoQuad2(CoupledThermoPlaneStressStiffness *stiff,
+                      ElementBehaviorType type, int)
+
+    cdef cppclass PSThermoQuad3(TACSElement):
+        PSThermoQuad3(CoupledThermoPlaneStressStiffness *stiff,
+                      ElementBehaviorType type, int)
+
+    cdef cppclass PSThermoQuad4(TACSElement):
+        PSThermoQuad4(CoupledThermoPlaneStressStiffness *stiff,
+                      ElementBehaviorType type, int)
+
+    cdef cppclass PSThermoQuad5(TACSElement):
+        PSThermoQuad5(CoupledThermoPlaneStressStiffness *stiff,
+                      ElementBehaviorType type, int)
+
+    cdef cppclass PSThermoQuad6(TACSElement):
+        PSThermoQuad6(CoupledThermoPlaneStressStiffness *stiff,
+                      ElementBehaviorType type, int)
+
+    # Declare the Plane Stress Thermoelastic Traction Quad elements
+    cdef cppclass PSThermoQuadTraction2(TACSElement):
+        PSThermoQuadTraction2(int, TacsScalar, TacsScalar)
+        PSThermoQuadTraction2(int, TacsScalar*, TacsScalar*)
+        
+    cdef cppclass PSThermoQuadTraction3(TACSElement):
+        PSThermoQuadTraction3(int, TacsScalar, TacsScalar)
+        PSThermoQuadTraction3(int, TacsScalar*, TacsScalar*)
+        
+    cdef cppclass PSThermoQuadTraction4(TACSElement):
+        PSThermoQuadTraction4(int, TacsScalar, TacsScalar)
+        PSThermoQuadTraction4(int, TacsScalar*, TacsScalar*)
+        
+    cdef cppclass PSThermoQuadTraction5(TACSElement):
+        PSThermoQuadTraction5(int, TacsScalar, TacsScalar)
+        PSThermoQuadTraction5(int, TacsScalar*, TacsScalar*)
+        
+    cdef cppclass PSThermoQuadTraction6(TACSElement):
+        PSThermoQuadTraction6(int, TacsScalar, TacsScalar)
+        PSThermoQuadTraction6(int, TacsScalar*, TacsScalar*)
+
+    # Declare Plane Stress Thermoelastic Heat Flux elements
+    cdef cppclass PSThermoQuadHF2(TACSElement):
+        PSThermoQuadHF2(int, TacsScalar, TacsScalar)
+        PSThermoQuadHF2(int, TacsScalar*, TacsScalar*)
+        
+    cdef cppclass PSThermoQuadHF3(TACSElement):
+        PSThermoQuadHF3(int, TacsScalar, TacsScalar)
+        PSThermoQuadHF3(int, TacsScalar*, TacsScalar*)
+        
+    cdef cppclass PSThermoQuadHF4(TACSElement):
+        PSThermoQuadHF4(int, TacsScalar, TacsScalar)
+        PSThermoQuadHF4(int, TacsScalar*, TacsScalar*)
+        
+    cdef cppclass PSThermoQuadHF5(TACSElement):
+        PSThermoQuadHF5(int, TacsScalar, TacsScalar)
+        PSThermoQuadHF5(int, TacsScalar*, TacsScalar*)
+
+    # Declare the Solid Thermoelastic elements
+    cdef cppclass SolidThermo2(TACSElement):
+        SolidThermo2(CoupledThermoSolidStiffness *stiff,
+                     ElementBehaviorType type, int)
+        
+    cdef cppclass SolidThermo3(TACSElement):
+        SolidThermo3(CoupledThermoSolidStiffness *stiff,
+                     ElementBehaviorType type, int)
+        
+    cdef cppclass SolidThermo4(TACSElement):
+        SolidThermo4(CoupledThermoSolidStiffness *stiff,
+                     ElementBehaviorType type, int)
+        
+    cdef cppclass SolidThermo5(TACSElement):
+        SolidThermo5(CoupledThermoSolidStiffness *stiff,
+                     ElementBehaviorType type, int)
+        
+    cdef cppclass SolidThermo6(TACSElement):
+        SolidThermo6(CoupledThermoSolidStiffness *stiff,
+                     ElementBehaviorType type, int)
+
+    # Declare the Solid Thermoelastic Traction elements
+    cdef cppclass TACS3DThermoTraction2(TACSElement):
+        TACS3DThermoTraction2(int, TacsScalar, TacsScalar, TacsScalar)
+        TACS3DThermoTraction2(int, TacsScalar*, TacsScalar*, TacsScalar*)
+        
+    cdef cppclass TACS3DThermoTraction3(TACSElement):
+        TACS3DThermoTraction3(int, TacsScalar, TacsScalar, TacsScalar)
+        TACS3DThermoTraction3(int, TacsScalar*, TacsScalar*, TacsScalar*)
+        
+    cdef cppclass TACS3DThermoTraction4(TACSElement):
+        TACS3DThermoTraction4(int, TacsScalar, TacsScalar, TacsScalar)
+        TACS3DThermoTraction4(int, TacsScalar*, TacsScalar*, TacsScalar*)
+        
+    cdef cppclass TACS3DThermoTraction5(TACSElement):
+        TACS3DThermoTraction5(int, TacsScalar, TacsScalar, TacsScalar)
+        TACS3DThermoTraction5(int, TacsScalar*, TacsScalar*, TacsScalar*)
+        
+    cdef cppclass TACS3DThermoTraction6(TACSElement):
+        TACS3DThermoTraction6(int, TacsScalar, TacsScalar, TacsScalar)
+        TACS3DThermoTraction6(int, TacsScalar*, TacsScalar*, TacsScalar*)
+
+    # Declare the Solid Thermoelastic Pressure Traction elements
+    cdef cppclass TACS3DThermoPressureTraction2(TACSElement):
+        TACS3DThermoPressureTraction2(int, TacsScalar)
+
+    cdef cppclass TACS3DThermoPressureTraction3(TACSElement):
+        TACS3DThermoPressureTraction3(int, TacsScalar)
+
+    cdef cppclass TACS3DThermoPressureTraction4(TACSElement):
+        TACS3DThermoPressureTraction4(int, TacsScalar)
+
+    cdef cppclass TACS3DThermoPressureTraction5(TACSElement):
+        TACS3DThermoPressureTraction5(int, TacsScalar)
+
+    cdef cppclass TACS3DThermoPressureTraction6(TACSElement):
+        TACS3DThermoPressureTraction6(int, TacsScalar)
+
+    # Declare the Solid Thermoelastic Heat Flux elements
+    cdef cppclass TACS3DThermoHF2(TACSElement):
+        TACS3DThermoHF2(int, TacsScalar, TacsScalar, TacsScalar)
+        TACS3DThermoHF2(int, TacsScalar*, TacsScalar*, TacsScalar*)
+        
+    cdef cppclass TACS3DThermoHF3(TACSElement):
+        TACS3DThermoHF3(int, TacsScalar, TacsScalar, TacsScalar)
+        TACS3DThermoHF3(int, TacsScalar*, TacsScalar*, TacsScalar*)
+        
+    cdef cppclass TACS3DThermoHF4(TACSElement):
+        TACS3DThermoHF4(int, TacsScalar, TacsScalar, TacsScalar)
+        TACS3DThermoHF4(int, TacsScalar*, TacsScalar*, TacsScalar*)
+        
+    cdef cppclass TACS3DThermoHF5(TACSElement):
+        TACS3DThermoHF5(int, TacsScalar, TacsScalar, TacsScalar)
+        TACS3DThermoHF5(int, TacsScalar*, TacsScalar*, TacsScalar*)
+
+    # Declare the Solid Thermoelastic Normal Heat Flux elements
+    cdef cppclass TACS3DThermoNormalHF2(TACSElement):
+        TACS3DThermoNormalHF2(int, TacsScalar)
+
+    cdef cppclass TACS3DThermoNormalHF3(TACSElement):
+        TACS3DThermoNormalHF3(int, TacsScalar)
+
+    cdef cppclass TACS3DThermoNormalHF4(TACSElement):
+        TACS3DThermoNormalHF4(int, TacsScalar)
+
+    cdef cppclass TACS3DThermoNormalHF5(TACSElement):
+        TACS3DThermoNormalHF5(int, TacsScalar)
 
 cdef extern from "PlaneStressTri6.h":
     cdef cppclass PlaneStressTri6(TACSElement):

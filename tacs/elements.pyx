@@ -414,7 +414,7 @@ cdef class Traction3D(Element):
                   TacsScalar tx, TacsScalar ty, TacsScalar tz,
                   np.ndarray[TacsScalar, ndim=1, mode='c'] box=None):
         if order < 2 or order > 5:
-            errmsg = 'Traction3D order must be between 2 and 4'
+            errmsg = 'Traction3D order must be between 2 and 5'
             raise ValueError(errmsg)
         if surf < 0 or surf >= 6:
             errmsg = 'Traction3D surf must be between 0 and 5'
@@ -436,6 +436,36 @@ cdef class Traction3D(Element):
             self.ptr.incref()
         elif order == 5:
             self.ptr = new TACS3DTraction5(surf, tx, ty, tz)
+            self.ptr.incref()
+        return
+    def __dealloc__(self):
+        if self.ptr:
+            self.ptr.decref()
+        return
+    def numNodes(self):
+        return self.ptr.numNodes()
+
+cdef class PressureTraction3D(Element):
+    def __cinit__(self, int order, int surf,
+                  TacsScalar pressure):
+        if order < 2 or order > 5:
+            errmsg = 'PressureTraction3D order must be between 2 and 5'
+            raise ValueError(errmsg)
+        if surf < 0 or surf >= 6:
+            errmsg = 'PressureTraction3D surf must be between 0 and 5'
+            raise ValueError(errmsg)
+        self.ptr = NULL
+        if order == 2:
+            self.ptr = new TACS3DPressureTraction2(surf, pressure)
+            self.ptr.incref()
+        elif order == 3:
+            self.ptr = new TACS3DPressureTraction3(surf, pressure)
+            self.ptr.incref()
+        elif order == 4:
+            self.ptr = new TACS3DPressureTraction4(surf, pressure)
+            self.ptr.incref()
+        elif order == 5:
+            self.ptr = new TACS3DPressureTraction5(surf, pressure)
             self.ptr.incref()
         return
     def __dealloc__(self):
@@ -682,6 +712,280 @@ cdef class PoissonQuad(Element):
             self.ptr.decref()
         return
 
+cdef class PSThermoelasticQuad(Element):
+    def __cinit__(self, int order, CoupledPlaneStress stiff,
+                  ElementBehaviorType elem_type=LINEAR,
+                  int component_num=0):
+        '''
+        Wrap the PSThermoQuad element class for order 2,3,4
+        '''
+        cdef CoupledThermoPlaneStressStiffness *con = _dynamicPSThermo(stiff.ptr)
+        if order == 2:
+            self.ptr = new PSThermoQuad2(con, elem_type, component_num)
+            self.ptr.incref()
+        elif order == 3:
+            self.ptr = new PSThermoQuad3(con, elem_type, component_num)
+            self.ptr.incref()
+        elif order == 4:
+            self.ptr = new PSThermoQuad4(con, elem_type, component_num)
+            self.ptr.incref()
+        elif order == 5:
+            self.ptr = new PSThermoQuad5(con, elem_type, component_num)
+            self.ptr.incref()
+        elif order == 6:
+            self.ptr = new PSThermoQuad6(con, elem_type, component_num)
+            self.ptr.incref()
+        else:
+            print("Order %d not implemented"%(order))
+        return
+
+    def __dealloc__(self):
+        if self.ptr:
+            self.ptr.decref()
+        return
+
+cdef class PSThermoQuadTraction(Element):
+    def __cinit__(self, int surf,
+                  np.ndarray[TacsScalar, ndim=1, mode='c'] tx,
+                  np.ndarray[TacsScalar, ndim=1, mode='c'] ty):
+        if len(tx) != len(ty):
+            errmsg = 'Traction lengths must be equal'
+            raise ValueError(errmsg)
+        if len(tx) < 2 or len(tx) > 7:
+            errmsg = 'Traction lengths must be between 2 and 7'
+        cdef int order = len(tx)
+        self.ptr = NULL
+        if order == 2:
+            self.ptr = new PSThermoQuadTraction2(surf, <TacsScalar*>tx.data,
+                                                 <TacsScalar*>ty.data)
+            self.ptr.incref()
+        elif order == 3:
+            self.ptr = new PSThermoQuadTraction3(surf, <TacsScalar*>tx.data,
+                                                 <TacsScalar*>ty.data)
+            self.ptr.incref()
+        elif order == 4:
+            self.ptr = new PSThermoQuadTraction4(surf, <TacsScalar*>tx.data,
+                                                 <TacsScalar*>ty.data)
+            self.ptr.incref()
+        elif order == 5:
+            self.ptr = new PSThermoQuadTraction5(surf, <TacsScalar*>tx.data,
+                                                 <TacsScalar*>ty.data)
+            self.ptr.incref()
+        elif order == 6:
+            self.ptr = new PSThermoQuadTraction6(surf, <TacsScalar*>tx.data,
+                                                 <TacsScalar*>ty.data)
+            self.ptr.incref()
+        return
+
+    def __dealloc__(self):
+        if self.ptr:
+            self.ptr.decref()
+        return
+
+    def numNodes(self):
+        return self.ptr.numNodes()
+
+cdef class PSThermoQuadHF(Element):
+    def __cinit__(self, int surf,
+                  np.ndarray[TacsScalar, ndim=1, mode='c'] tx,
+                  np.ndarray[TacsScalar, ndim=1, mode='c'] ty):
+        if len(tx) != len(ty):
+            errmsg = 'Traction lengths must be equal'
+            raise ValueError(errmsg)
+        if len(tx) < 2 or len(tx) > 5:
+            errmsg = 'Traction lengths must be between 2 and 4'
+        cdef int order = len(tx)
+        self.ptr = NULL
+        if order == 2:
+            self.ptr = new PSThermoQuadHF2(surf, <TacsScalar*>tx.data,
+                                           <TacsScalar*>ty.data)
+            self.ptr.incref()
+        elif order == 3:
+            self.ptr = new PSThermoQuadHF3(surf, <TacsScalar*>tx.data,
+                                           <TacsScalar*>ty.data)
+            self.ptr.incref()
+        elif order == 4:
+            self.ptr = new PSThermoQuadHF4(surf, <TacsScalar*>tx.data,
+                                           <TacsScalar*>ty.data)
+            self.ptr.incref()
+        elif order == 5:
+            self.ptr = new PSThermoQuadHF5(surf, <TacsScalar*>tx.data,
+                                           <TacsScalar*>ty.data)
+            self.ptr.incref()
+        return
+
+    def __dealloc__(self):
+        if self.ptr:
+            self.ptr.decref()
+        return
+
+    def numNodes(self):
+        return self.ptr.numNodes()
+
+
+cdef class SolidThermo(Element):
+    def __cinit__(self, int order, CoupledSolid stiff,
+                  ElementBehaviorType elem_type=LINEAR,
+                  int component_num=0):
+        '''
+        Wrap the SolidThermo element class for order 2,3,4
+        '''
+        cdef CoupledThermoSolidStiffness *con = _dynamicSolidThermo(stiff.ptr)
+        if order == 2:
+            self.ptr = new SolidThermo2(con, elem_type, component_num)
+            self.ptr.incref()
+        elif order == 3:
+            self.ptr = new SolidThermo3(con, elem_type, component_num)
+            self.ptr.incref()
+        elif order == 4:
+            self.ptr = new SolidThermo4(con, elem_type, component_num)
+            self.ptr.incref()
+        elif order == 5:
+            self.ptr = new SolidThermo5(con, elem_type, component_num)
+            self.ptr.incref()
+        elif order == 6:
+            self.ptr = new SolidThermo6(con, elem_type, component_num)
+            self.ptr.incref()
+        return
+
+    def __dealloc__(self):
+        if self.ptr:
+            self.ptr.decref()
+        return
+
+cdef class TACS3DThermoTraction(Element):
+    def __cinit__(self, int order, int surf,
+                  TacsScalar tx, TacsScalar ty, TacsScalar tz):
+        if order < 2 or order > 7:
+            errmsg = 'ThermoTraction3D order must be between 2 and 4'
+            raise ValueError(errmsg)
+        if surf < 0 or surf >= 6:
+            errmsg = 'ThermoTraction3D surf must be between 0 and 5'
+            raise ValueError(errmsg)
+        self.ptr = NULL
+        if order == 2:
+            self.ptr = new TACS3DThermoTraction2(surf, tx, ty, tz)
+            self.ptr.incref()
+        elif order == 3:
+            self.ptr = new TACS3DThermoTraction3(surf, tx, ty, tz)
+            self.ptr.incref()
+        elif order == 4:
+            self.ptr = new TACS3DThermoTraction4(surf, tx, ty, tz)
+            self.ptr.incref()
+        elif order == 5:
+            self.ptr = new TACS3DThermoTraction5(surf, tx, ty, tz)
+            self.ptr.incref()
+        elif order == 6:
+            self.ptr = new TACS3DThermoTraction6(surf, tx, ty, tz)
+            self.ptr.incref()
+
+        return
+
+    def __dealloc__(self):
+        if self.ptr:
+            self.ptr.decref()
+        return
+
+    def numNodes(self):
+        return self.ptr.numNodes()
+
+cdef class TACS3DThermoPressureTraction(Element):
+    def __cinit__(self, int order, int surf,
+                  TacsScalar pressure):
+        if order < 2 or order > 5:
+            errmsg = 'ThermoPressureTraction3D order must be between 2 and 5'
+            raise ValueError(errmsg)
+        if surf < 0 or surf >= 6:
+            errmsg = 'ThermoPressureTraction3D surf must be between 0 and 5'
+            raise ValueError(errmsg)
+        self.ptr = NULL
+        if order == 2:
+            self.ptr = new TACS3DThermoPressureTraction2(surf, pressure)
+            self.ptr.incref()
+        elif order == 3:
+            self.ptr = new TACS3DThermoPressureTraction3(surf, pressure)
+            self.ptr.incref()
+        elif order == 4:
+            self.ptr = new TACS3DThermoPressureTraction4(surf, pressure)
+            self.ptr.incref()
+        elif order == 5:
+            self.ptr = new TACS3DThermoPressureTraction5(surf, pressure)
+            self.ptr.incref()
+
+        return
+
+    def __dealloc__(self):
+        if self.ptr:
+            self.ptr.decref()
+        return
+
+    def numNodes(self):
+        return self.ptr.numNodes()
+
+cdef class TACS3DThermoHF(Element):
+    def __cinit__(self, int order, int surf,
+                  TacsScalar tx, TacsScalar ty, TacsScalar tz):
+        if order < 2 or order > 5:
+            errmsg = 'HeatFlux3D order must be between 2 and 4'
+            raise ValueError(errmsg)
+        if surf < 0 or surf >= 6:
+            errmsg = 'HeatFlux3D surf must be between 0 and 5'
+            raise ValueError(errmsg)
+        self.ptr = NULL
+        if order == 2:
+            self.ptr = new TACS3DThermoHF2(surf, tx, ty, tz)
+            self.ptr.incref()
+        elif order == 3:
+            self.ptr = new TACS3DThermoHF3(surf, tx, ty, tz)
+            self.ptr.incref()
+        elif order == 4:
+            self.ptr = new TACS3DThermoHF4(surf, tx, ty, tz)
+            self.ptr.incref()
+        elif order == 5:
+            self.ptr = new TACS3DThermoHF5(surf, tx, ty, tz)
+            self.ptr.incref()
+        return
+
+    def __dealloc__(self):
+        if self.ptr:
+            self.ptr.decref()
+        return
+
+    def numNodes(self):
+        return self.ptr.numNodes()
+
+cdef class TACS3DThermoNormalHF(Element):
+    def __cinit__(self, int order, int surf,
+                  TacsScalar qn):
+        if order < 2 or order > 4:
+            errmsg = 'HeatFlux3D order must be between 2 and 4'
+            raise ValueError(errmsg)
+        if surf < 0 or surf >= 6:
+            errmsg = 'HeatFlux3D surf must be between 0 and 5'
+            raise ValueError(errmsg)
+        self.ptr = NULL
+        if order == 2:
+            self.ptr = new TACS3DThermoNormalHF2(surf, qn)
+            self.ptr.incref()
+        elif order == 3:
+            self.ptr = new TACS3DThermoNormalHF3(surf, qn)
+            self.ptr.incref()
+        elif order == 4:
+            self.ptr = new TACS3DThermoNormalHF4(surf, qn)
+            self.ptr.incref()
+        elif order == 5:
+            self.ptr = new TACS3DThermoNormalHF5(surf, qn)
+            self.ptr.incref()
+        return
+
+    def __dealloc__(self):
+        if self.ptr:
+            self.ptr.decref()
+        return
+
+    def numNodes(self):
+        return self.ptr.numNodes()
+
 # This wraps a C++ array with a numpy array for later useage
 cdef inplace_array_1d(int nptype, int dim1, void *data_ptr):
     '''Return a numpy version of the array'''
@@ -802,5 +1106,5 @@ cdef class pyElement(Element):
 
     def addAdjResProduct(self, time, scale, dvSens, psi,
                          Xpts, vars, dvars, ddvars):
-        '''Raise error if this function is called and hasn't been overrided'''
+        '''Raise error if this function is called and hasn\'t been overrided'''
         raise NotImplementedError()

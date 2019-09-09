@@ -111,6 +111,7 @@ class TACSVec : public TACSObject {
   // ----------------------------------
   virtual void setRand( double lower = -1.0, double upper = 1.0 ){}
   virtual void applyBCs( TACSBcMap *map, TACSVec *vec=NULL ){}
+  virtual void setBCs( TACSBcMap *map ){}
 };
 
 /*!  
@@ -169,6 +170,7 @@ class TACSMat : public TACSObject {
   // Operations required for solving problems
   // ----------------------------------------
   virtual void mult( TACSVec *x, TACSVec *y ) = 0;
+  virtual void multTranspose( TACSVec *x, TACSVec *y ){}
   virtual void copyValues( TACSMat *mat ){}
   virtual void scale( TacsScalar alpha ){}
   virtual void axpy( TacsScalar alpha, TACSMat *mat ){}

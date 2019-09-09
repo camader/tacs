@@ -30,9 +30,9 @@ import numpy as np
 include "TacsTypedefs.pxi"
 
 cdef inline char* convert_to_chars(s):
-   if isinstance(s, unicode):
-      s = (<unicode>s).encode('utf8')
-   return s
+    if isinstance(s, unicode):
+        s = (<unicode>s).encode('utf8')
+    return s
 
 cdef inline convert_bytes_to_str(bytes s):
     if PY_MAJOR_VERSION >= 3:
@@ -134,6 +134,7 @@ cdef extern from "BVec.h":
         TACSBVec(TACSVarMap*, int)
         int getSize(int*)
         int getBlockSize()
+        TACSVarMap *getVarMap()
         int getArray(TacsScalar**)
         int readFromFile(const_char*)
         int writeToFile(const_char*)
@@ -145,13 +146,17 @@ cdef extern from "BVec.h":
         void endDistributeValues()
 
 cdef extern from "BVecDist.h":
-     cdef cppclass TACSVarMap(TACSObject):
+    cdef cppclass TACSVarMap(TACSObject):
         TACSVarMap(MPI_Comm, int)
         MPI_Comm getMPIComm()
         void getOwnerRange(const int**)
 
-     cdef cppclass TACSBVecIndices(TACSObject):
-         TACSBVecIndices(int**, int)
+    cdef cppclass TACSBVecIndices(TACSObject):
+        TACSBVecIndices(int**, int)
+        int getIndices(const int **)
+
+    cdef cppclass TACSBVecDistribute(TACSObject):
+        TACSBVecIndices *getIndices()
 
 cdef class VarMap:
     cdef TACSVarMap *ptr
@@ -191,6 +196,13 @@ cdef inline _init_VecInterp(TACSBVecInterp *ptr):
     interp.ptr.incref()
     return interp
 
+cdef extern from "BCSRMat.h":
+    cdef cppclass BCSRMat(TACSObject):
+        int getBlockSize()
+        int getRowDim()
+        int getColDim()
+        void getDenseColumnMajor(TacsScalar*)
+
 cdef extern from "PMat.h":
     cdef cppclass TACSPMat(TACSMat):
         pass
@@ -209,7 +221,9 @@ cdef extern from "DistMat.h":
 
 cdef extern from "ScMat.h":
     cdef cppclass ScMat(TACSMat):
-         pass
+        void getBCSRMat(BCSRMat**, BCSRMat**, BCSRMat**, BCSRMat**)
+        TACSBVecDistribute *getLocalMap()
+        TACSBVecDistribute *getSchurMap()
 
     cdef cppclass PcScMat(TACSPc):
         PcScMat(ScMat *mat, int levFill, double fill,
@@ -245,7 +259,7 @@ cdef extern from "TACSElement.h":
 
 cdef extern from "TACSFunction.h":
     cdef cppclass TACSFunction(TACSObject):
-        pass
+        void setDomain(int*, int)
 
 cdef extern from "TACSConstitutive.h":
     cdef cppclass TACSConstitutive(TACSObject):
@@ -357,6 +371,7 @@ cdef extern from "TACSAssembler.h":
         void initialize()
 
         # Return information about the TACSObject
+        int getVarsPerNode()
         int getNumNodes()
         int getNumDependentNodes()
         int getNumOwnedNodes()
@@ -398,6 +413,7 @@ cdef extern from "TACSAssembler.h":
 
         void applyBCs(TACSVec*)
         void applyBCs(TACSMat*)
+        void setBCs(TACSVec*)
 
         # Zero the variables
         void zeroVariables()
@@ -497,6 +513,20 @@ cdef extern from "TACSBuckling.h":
         TacsScalar extractEigenvalue(int, TacsScalar*)
         TacsScalar extractEigenvector(int, TACSBVec*, TacsScalar*)
 
+    cdef cppclass TACSLinearBuckling(TACSObject):
+        TACSLinearBuckling( TACSAssembler *,
+                            TacsScalar,
+                            TACSMat *, TACSMat *,
+                            TACSMat *, TACSKsm *,
+                            int, int, double)
+        TACSAssembler* getTACS()
+        TacsScalar getSigma()
+        void setSigma(TacsScalar)
+        void solve(TACSVec*, KSMPrint*)
+        void evalEigenDVSens(int, TacsScalar, int)
+        TacsScalar extractEigenvalue(int, TacsScalar*)
+        TacsScalar extractEigenvector(int, TACSBVec*, TacsScalar*)
+
 cdef extern from "TACSMeshLoader.h":
     cdef cppclass TACSMeshLoader(TACSObject):
         TACSMeshLoader(MPI_Comm _comm)
@@ -567,6 +597,7 @@ cdef extern from "TACSIntegrator.h":
         void setUseFEMat(int,OrderingType)
         void setInitNewtonDeltaFraction(double)
         void setKrylovSubspaceMethod(TACSKsm *_ksm)
+        void setTimeInterval(double, double)
         void setFunctions(TACSFunction **funcs, int num_funcs,
                           int num_design_vars,
                           int start_step, int end_step)

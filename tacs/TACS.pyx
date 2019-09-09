@@ -98,7 +98,17 @@ cdef class Function:
         if self.ptr:
             self.ptr.decref()
         return
+    def setDomain(self, list elem_index):
+        cdef int num_elems = len(elem_index)
+        cdef int *elem_ind = NULL
 
+        elem_ind = <int*>malloc(num_elems*sizeof(int));
+        for i in range(num_elems):
+            elem_ind[i] = <int>elem_index[i]
+
+        self.ptr.setDomain(elem_ind, num_elems)
+        free(elem_ind)
+        return
 # A generic wrapper class for the TACSElement object
 cdef class Element:
     '''Base element class'''
@@ -162,6 +172,12 @@ cdef class Vec:
         if self.ptr:
             self.ptr.decref()
         return
+
+    def getVarsPerNode(self):
+        '''
+        Return the number of variables per node
+        '''
+        return self.ptr.getBlockSize()
 
     def zeroEntries(self):
         '''
@@ -239,7 +255,7 @@ cdef class Vec:
     def getValues(self, np.ndarray[int, ndim=1] var):
         '''
         Get the values from the given global indices
-        '''        
+        '''
         cdef int fail = 0
         cdef int length = 0
         cdef int bsize = 0
@@ -306,6 +322,12 @@ cdef class Vec:
         '''
         self.ptr.endDistributeValues()
         return
+
+    def getVarMap(self):
+        '''
+        Get the TACSVarMap object from the class
+        '''
+        return _init_VarMap(self.ptr.getVarMap())
 
     def writeToFile(self, fname):
         '''
@@ -440,6 +462,47 @@ cdef class Mat:
         '''
         self.ptr.axpy(alpha, mat.ptr)
 
+    def getDenseMatrix(self):
+        '''
+        Get the dense, column-major order of the matrix.  This only
+        works for serial cases.
+        '''
+        cdef int n = 0
+        cdef int m = 0
+        cdef int bs = 0
+        cdef np.ndarray A = None
+        cdef ScMat *sc_ptr = NULL
+        cdef BCSRMat *bcsr = NULL
+        cdef TACSBVecDistribute *dist = NULL
+        cdef TACSBVecIndices *indices = NULL
+        cdef const int *indx = NULL
+
+        sc_ptr = _dynamicScMat(self.ptr)
+        if sc_ptr != NULL:
+            sc_ptr.getBCSRMat(&bcsr, NULL, NULL, NULL)
+            bs = bcsr.getBlockSize()
+            dist = sc_ptr.getLocalMap()
+            indices = dist.getIndices()
+            if bcsr != NULL:
+                n = bcsr.getRowDim()*bs
+                m = bcsr.getColDim()*bs
+                A = np.zeros((m, n), dtype=dtype)
+                bcsr.getDenseColumnMajor(<TacsScalar*>A.data)
+
+                # Reorder the matrix
+                if indices != NULL:
+                    indices.getIndices(&indx)
+                    P = np.zeros((m, n), dtype=dtype)
+                    for j in range(bcsr.getColDim()):
+                        for i in range(bcsr.getRowDim()):
+                            P[bs*indx[i]:bs*(indx[i]+1), bs*indx[j]:bs*(indx[j]+1)] =\
+                                                          A[bs*i:bs*(i+1), bs*j:bs*(j+1)]
+                    return P.T
+                else:
+                    return A.T
+
+        return None
+
 # Create a generic preconditioner class
 cdef class Pc:
     def __cinit__(self, Mat mat=None, *args, **kwargs):
@@ -498,7 +561,6 @@ cdef class Pc:
             pc_ptr.setMonitorFactorFlag(flag)
             pc_ptr.setMonitorBackSolveFlag(flag)
         return
-
 
 cdef class Mg(Pc):
     def __cinit__(self, MPI.Comm comm=None, int num_levs=-1, double omega=0.5,
@@ -774,6 +836,12 @@ cdef class Assembler:
         '''
         return self.ptr.getNumElements()
 
+    def getVarsPerNode(self):
+        '''
+        Return the number of variables per node
+        '''
+        return self.ptr.getVarsPerNode()
+
     def getOwnerRange(self):
         '''
         Get the ranges of global node numbers owned by each processor
@@ -916,6 +984,14 @@ cdef class Assembler:
                                    num_dvs)
         return
 
+    def getMPIComm(self):
+        '''
+        Get the MPI communicator
+        '''
+        cdef MPI.Comm comm = MPI.Comm()
+        comm.ob_mpi = self.ptr.getMPIComm()
+        return comm
+
     def setNumThreads(self, int t):
         '''
         Set the number of threads to use in computation
@@ -989,6 +1065,11 @@ cdef class Assembler:
     def applyMatBCs(self, Mat mat):
         '''Apply boundary conditions to the matrix'''
         self.ptr.applyBCs(mat.ptr)
+        return
+
+    def setBCs(self, Vec vec):
+        '''Apply the Dirichlet boundary conditions to the state vector'''
+        self.ptr.setBCs(vec.ptr)
         return
 
     def createFEMat(self, OrderingType order_type=TACS_AMD_ORDER):
@@ -1309,11 +1390,11 @@ cdef class Assembler:
         # Add the derivative of the product of the adjoint and residual
         A[:] = 0.0
         self.ptr.addAdjointResProducts(1.0, adj, num_adj,
-                                                 Avals, num_design_vars)
+                                       Avals, num_design_vars)
 
         # Allreduce the contributions in-place across all processors
         MPI_Allreduce(MPI_IN_PLACE, Avals, num_design_vars*num_adj,
-                          TACS_MPI_TYPE, MPI_SUM, comm)
+                      TACS_MPI_TYPE, MPI_SUM, comm)
         return
 
     def evalXptSens(self, Function func, Vec vec):
@@ -1387,7 +1468,7 @@ cdef class Assembler:
         '''
         Compute the Jacobian-vector product
         '''
-        self.ptr.addJacobianVecProduct(scale, alpha, beta, gamma, 
+        self.ptr.addJacobianVecProduct(scale, alpha, beta, gamma,
                                        x.ptr, y.ptr, matOr)
         return
 
@@ -1821,6 +1902,63 @@ cdef class FrequencyAnalysis:
         eigval = self.ptr.extractEigenvector(eig, vec.ptr, &err)
         return eigval, err
 
+cdef class BucklingAnalysis:
+    cdef TACSLinearBuckling *ptr
+    def __cinit__(self, Assembler assembler, TacsScalar sigma,
+                  Mat G, Mat K, KSM solver, int max_lanczos=100,
+                  int num_eigs=5, double eig_tol=1e-6):
+        # Get the auxiliary matrix from the solver
+        cdef TACSMat *aux_mat
+        solver.ptr.getOperators(&aux_mat, NULL)
+
+        # Create the linear buckling class
+        self.ptr = new TACSLinearBuckling(assembler.ptr, sigma, G.ptr,
+                                          K.ptr, aux_mat, solver.ptr, max_lanczos,
+                                          num_eigs, eig_tol)
+        self.ptr.incref()
+        return
+
+    def __dealloc__(self):
+        if self.ptr:
+            self.ptr.decref()
+
+    def getSigma(self):
+        return self.ptr.getSigma()
+
+    def setSigma(self, TacsScalar sigma):
+        self.ptr.setSigma(sigma)
+
+    def solve(self, Vec force=None, print_flag=True, int freq=10):
+        cdef TACSBVec *f = NULL
+        cdef MPI_Comm comm
+        cdef int rank
+        cdef TACSAssembler *assembler = NULL
+        cdef KSMPrint *ksm_print = NULL
+
+        if force is not None:
+            f = force.ptr
+
+        if print_flag:
+            assembler = self.ptr.getTACS()
+            comm = assembler.getMPIComm()
+            MPI_Comm_rank(comm, &rank)
+            ksm_print = new KSMPrintStdout("BucklingAnalysis", rank, freq)
+
+        self.ptr.solve(f, ksm_print)
+        return
+
+    def extractEigenvalue(self, int eig):
+        cdef TacsScalar err = 0.0
+        cdef TacsScalar eigval = 0.0
+        eigval = self.ptr.extractEigenvalue(eig, &err)
+        return eigval, err
+
+    def extractEigenvector(self, int eig, Vec vec):
+        cdef TacsScalar err = 0.0
+        cdef TacsScalar eigval = 0.0
+        eigval = self.ptr.extractEigenvector(eig, vec.ptr, &err)
+        return eigval, err
+
 # A generic abstract class for all integrators implemented in TACS
 cdef class Integrator:
     '''
@@ -1906,6 +2044,13 @@ cdef class Integrator:
         Make TACS use this linear solver
         '''
         self.ptr.setKrylovSubspaceMethod(ksm.ptr)
+        return
+
+    def setTimeInterval(self, double tinit, double tfinal):
+        '''
+        Set the time interval for the simulation
+        '''
+        self.ptr.setTimeInterval(tinit, tfinal)
         return
 
     def setFunctions(self, list funcs, int num_dvs,

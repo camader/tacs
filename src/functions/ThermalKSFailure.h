@@ -3,11 +3,7 @@
   Structures, a parallel finite-element code for structural and
   multidisciplinary design optimization.
 
-  Copyright (C) 2010 University of Toronto
-  Copyright (C) 2012 University of Michigan
-  Copyright (C) 2014 Georgia Tech Research Corporation
-  Additional copyright (C) 2010 Graeme J. Kennedy and Joaquim
-  R.R.A. Martins All rights reserved.
+  Copyright (C) 2018 Georgia Tech Research Corporation
 
   TACS is licensed under the Apache License, Version 2.0 (the
   "License"); you may not use this software except in compliance with
@@ -16,14 +12,11 @@
   http://www.apache.org/licenses/LICENSE-2.0
 */
 
-#ifndef TACS_KS_FAILURE_H
-#define TACS_KS_FAILURE_H
-
-/*
-  Compute the KS function in TACS
-*/
+#ifndef TACS_THERMAL_KS_FAILURE_H
+#define TACS_THERMAL_KS_FAILURE_H
 
 #include "TACSFunction.h"
+#include "KSFailure.h"
 
 /*
   The following class implements the methods from TACSFunction.h
@@ -52,24 +45,21 @@
   note: if no subdomain is specified, the calculation takes place over
   all the elements in the model
 */
-class TACSKSFailure : public TACSFunction {
+class TACSThermalKSFailure : public TACSFunction {
  public:
-  enum KSFailureType { DISCRETE, CONTINUOUS,
-                       PNORM_DISCRETE, PNORM_CONTINUOUS };
-  enum KSConstitutiveFunction { FAILURE, BUCKLING };
-
-  TACSKSFailure( TACSAssembler * _tacs, double ksWeight,
-                 KSConstitutiveFunction func=FAILURE,
-                 double alpha=1.0 );
-  ~TACSKSFailure();
+  TACSThermalKSFailure( TACSAssembler * _tacs, double ksWeight,
+                        TACSKSFailure::KSConstitutiveFunction
+                          func=TACSKSFailure::FAILURE,
+                        double alpha=1.0 );
+  ~TACSThermalKSFailure();
 
   // Retrieve the name of the function
   // ---------------------------------
-  const char *functionName();
+  const char * functionName();
 
   // Set parameters for the KS function
   // ----------------------------------
-  void setKSFailureType( enum KSFailureType type );
+  void setKSFailureType( enum TACSKSFailure::KSFailureType type );
   double getParameter();
   void setParameter( double _ksWeight );
   void setLoadFactor( TacsScalar _loadFactor );
@@ -106,7 +96,6 @@ class TACSKSFailure : public TACSFunction {
   // Return the value of the function
   // --------------------------------
   TacsScalar getFunctionValue();
-  TacsScalar getMaximumFailure();
 
   // State variable sensitivities
   // ----------------------------
@@ -133,11 +122,14 @@ class TACSKSFailure : public TACSFunction {
                           const TacsScalar dvars[], const TacsScalar ddvars[],
                           TACSFunctionCtx *ctx );
  private:
+  void getShapeFunctions( const double pt[], double N[],
+                          int order, int dim );
+
   // The type of aggregation to use
-  KSFailureType ksType;
+  TACSKSFailure::KSFailureType ksType;
 
   // The constitutive function to use
-  KSConstitutiveFunction conType;
+  TACSKSFailure::KSConstitutiveFunction conType;
 
   // The weight on the ks function value
   double ksWeight;
@@ -158,8 +150,8 @@ class TACSKSFailure : public TACSFunction {
   // and the value of the KS function
   TacsScalar ksFailSum, maxFail;
 
-  // Used for the case when this is used to evaluate the p-norm
-  TacsScalar invPnorm;
+  // Whether the domain is a plane stress or 3d
+  int is_2d, is_3d;
 };
 
-#endif // TACS_KS_FAILURE_H
+#endif

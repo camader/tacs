@@ -25,6 +25,7 @@ np.import_array()
 
 # Import the definition required for const strings
 from libc.string cimport const_char
+from libc.stdlib cimport malloc, free
 
 # Import C methods for python
 from cpython cimport PyObject, Py_INCREF
@@ -49,7 +50,7 @@ cdef class Function:
         if self.ptr:
             self.ptr.decref()
         return
-
+    
 cdef class Compliance(Function):
     def __cinit__(self, Assembler tacs):
         '''
@@ -170,3 +171,93 @@ cdef class InducedFailure(Function):
 
     def setParameter(self, double param):
         self.iptr.setParameter(param)
+
+cdef class ThermalKSFailure(Function):
+    cdef TACSThermalKSFailure *ksptr
+    def __cinit__(self, Assembler tacs, double ksWeight, double alpha=1.0):
+        '''
+        Wrap the function KSFailure
+        '''
+        self.ksptr = new TACSThermalKSFailure(tacs.ptr, ksWeight,
+                                              KS_FAILURE, alpha)
+        self.ptr = self.ksptr
+        self.ptr.incref()
+        return
+        
+    def setKSFailureType(self, ftype='discrete'):
+        if ftype == 'discrete':
+            self.ksptr.setKSFailureType(KS_FAILURE_DISCRETE)
+        elif ftype == 'continuous':
+            self.ksptr.setKSFailureType(KS_FAILURE_CONTINUOUS)
+        return
+
+cdef class HeatFlux(Function):
+    cdef HeatFluxIntegral *hptr
+    def __cinit__(self, Assembler assembler, list elem_index,
+                  list surfaces):
+        cdef int num_elems = len(elem_index)
+        cdef int *elem_ind = NULL
+        cdef int *surf = NULL
+
+        elem_ind = <int*>malloc(num_elems*sizeof(int));
+        surf = <int*>malloc(num_elems*sizeof(int));
+
+        for i in range(num_elems):
+            elem_ind[i] = <int>elem_index[i]
+            surf[i] = <int>surfaces[i]
+        self.hptr = new HeatFluxIntegral(assembler.ptr, elem_ind, surf,
+                                         num_elems)
+        self.ptr = self.hptr
+        self.ptr.incref()
+        
+        free(elem_ind)
+        free(surf)
+        return
+
+cdef class KSTemperature(Function):
+    cdef TACSKSTemperature *ksptr
+    def __cinit__(self, Assembler tacs, double ksWeight):
+        '''
+        Wrap the function KSFailure
+        '''
+        self.ksptr = new TACSKSTemperature(tacs.ptr, ksWeight)
+        self.ptr = self.ksptr
+        self.ptr.incref()
+        return
+
+    def setKSDispType(self, ftype='continuous'):
+        if ftype == 'discrete':
+            self.ksptr.setKSDispType(KS_TEMP_DISCRETE)
+        elif ftype == 'continuous':
+            self.ksptr.setKSDispType(KS_TEMP_CONTINUOUS)
+        elif ftype == 'pnorm-discrete':
+            self.ksptr.setKSDispType(PNORM_TEMP_DISCRETE)
+        elif ftype == 'pnorm-continuous':
+            self.ksptr.setKSDispType(PNORM_TEMP_CONTINUOUS)
+        return
+	
+cdef class KSMatTemperature(Function):
+    cdef TACSKSMatTemperature *ksptr
+    def __cinit__(self, Assembler tacs, double ksWeight, int nmats):
+        '''
+        Wrap the function KSMatTemperature
+        '''
+        self.ksptr = new TACSKSMatTemperature(tacs.ptr, ksWeight, KS_TEMP_CONTINUOUS, nmats)
+        self.ptr = self.ksptr
+        self.ptr.incref()
+        return
+
+    def setKSDispType(self, ftype='continuous'):
+        if ftype == 'discrete':
+            self.ksptr.setKSDispType(KS_TEMP_DISCRETE)
+        elif ftype == 'continuous':
+            self.ksptr.setKSDispType(KS_TEMP_CONTINUOUS)
+        elif ftype == 'pnorm-discrete':
+            self.ksptr.setKSDispType(PNORM_TEMP_DISCRETE)
+        elif ftype == 'pnorm-continuous':
+            self.ksptr.setKSDispType(PNORM_TEMP_CONTINUOUS)
+        return
+
+    def setNumMats(self, _nmats):
+        self.ksptr.setNumMats(_nmats)
+        return

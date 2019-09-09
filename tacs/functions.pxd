@@ -7,8 +7,8 @@
 #  TACS is licensed under the Apache License, Version 2.0 (the
 #  "License"); you may not use this software except in compliance with
 #  the License.  You may obtain a copy of the License at
-#  
-#  http://www.apache.org/licenses/LICENSE-2.0 
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
 
 # distutils: language=c++
 
@@ -28,8 +28,8 @@ cdef extern from "TACSFunction.h":
     enum FunctionDomain:
         ENTIRE_DOMAIN
         SUB_DOMAIN
-        NO_DOMAIN        
-    
+        NO_DOMAIN
+
 cdef extern from "Compliance.h":
     cdef cppclass TACSCompliance(TACSFunction):
         TACSCompliance(TACSAssembler *tacs)
@@ -44,13 +44,13 @@ cdef extern from "KSFailure.h":
         KS_FAILURE_CONTINUOUS"TACSKSFailure::CONTINUOUS"
         PNORM_FAILURE_DISCRETE"TACSKSFailure::PNORM_DISCRETE"
         PNORM_FAILURE_CONTINUOUS"TACSKSFailure::PNORM_CONTINUOUS"
-        
+
     enum KSConstitutiveFunction"TACSKSFailure::KSConstitutiveFunction":
         KS_FAILURE"TACSKSFailure::FAILURE"
         KS_BUCKLING"TACSKSFailure::BUCKLING"
 
     cdef cppclass TACSKSFailure(TACSFunction):
-        TACSKSFailure(TACSAssembler *tacs, double ksWeight,  
+        TACSKSFailure(TACSAssembler *tacs, double ksWeight,
                       KSConstitutiveFunction func,
                       double alpha)
         void setKSFailureType(KSFailureType ftype)
@@ -67,7 +67,7 @@ cdef extern from "KSDisplacement.h":
         PNORM_DISP_CONTINUOUS"TACSKSDisplacement::PNORM_CONTINUOUS"
 
     cdef cppclass TACSKSDisplacement(TACSFunction):
-        TACSKSDisplacement(TACSAssembler *tacs, double ksWeight, 
+        TACSKSDisplacement(TACSAssembler *tacs, double ksWeight,
                            TacsScalar dir[])
         void setKSDispType(KSDisplacementType)
 
@@ -89,7 +89,7 @@ cdef extern from "InducedFailure.h":
     enum InducedConstitutiveFunction"TACSInducedFailure::InducedConstitutiveFunction":
         INDUCED_FAILURE"TACSInducedFailure::FAILURE"
         INDUCED_BUCKLING"TACSInducedFailure::BUCKLING"
-      
+
     cdef cppclass TACSInducedFailure(TACSFunction):
         TACSInducedFailure(TACSAssembler *tacs, double P,
                            InducedConstitutiveFunction func)
@@ -98,3 +98,34 @@ cdef extern from "InducedFailure.h":
         double getParameter()
         void setLoadFactor(TacsScalar _loadFactor)
         void setMaxFailOffset(TacsScalar _max_fail)
+
+cdef extern from "ThermalKSFailure.h":
+    cdef cppclass TACSThermalKSFailure(TACSFunction):
+        TACSThermalKSFailure(TACSAssembler *tacs, double ksWeight,
+                             KSConstitutiveFunction func,
+                             double alpha)
+        void setKSFailureType(KSFailureType ftype)
+        double getParameter()
+        void setParameter(double _ksWeight)
+        void setLoadFactor(TacsScalar _loadFactor)
+        void setMaxFailOffset(TacsScalar _maxFail)
+
+cdef extern from "HeatFlux.h":
+    cdef cppclass HeatFluxIntegral( TACSFunction ):
+        HeatFluxIntegral( TACSAssembler*, int*, int*, int )
+        
+cdef extern from "KSTemperature.h":
+    enum KSTemperatureType"KSTemperature::KSFailureType":
+        KS_TEMP_DISCRETE"TACSKSTemperature::DISCRETE"
+        KS_TEMP_CONTINUOUS"TACSKSTemperature::CONTINUOUS"
+        PNORM_TEMP_DISCRETE"TACSKSTemperature::PNORM_DISCRETE"
+        PNORM_TEMP_CONTINUOUS"TACSKSTemperature::PNORM_CONTINUOUS"
+
+    cdef cppclass TACSKSTemperature(TACSFunction):
+        TACSKSTemperature(TACSAssembler *tacs, double ksWeight)
+        void setKSDispType(KSTemperatureType)
+cdef extern from "KSMatTemperature.h":
+    cdef cppclass TACSKSMatTemperature(TACSFunction):
+        TACSKSMatTemperature(TACSAssembler *tacs, double ksWeight, KSTemperatureType, int)
+        void setKSDispType(KSTemperatureType)
+        void setNumMats(int)
