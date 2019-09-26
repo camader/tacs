@@ -390,6 +390,8 @@ class GMRES : public TACSKsm {
   void setMonitor( KSMPrint *_monitor );
   void setOrthoType( enum OrthoType otype );
   void setTimeMonitor();
+  int getIterCount(){return niters;}
+
 
   const char *TACSObjectName();
 
@@ -406,6 +408,7 @@ class GMRES : public TACSKsm {
   int msub;
   int nrestart;
   int isFlexible;
+  int niters;
 
   TACSVec **W;   // The Arnoldi vectors that span the Krylov subspace
   TACSVec **Z;   // An additional flexible subspace of vectors

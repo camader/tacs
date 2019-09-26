@@ -20,6 +20,8 @@ cimport mpi4py.MPI as MPI
 import numpy as np
 cimport numpy as np
 from libc.string cimport const_char
+# Only required for Tim's rectangleEBStiffness class which is not implemented yet
+# from libcpp cimport bool 
 
 # Import C methods for python
 from cpython cimport PyObject, Py_INCREF
@@ -42,6 +44,44 @@ cdef extern from "isoFSDTStiffness.h":
                          TacsScalar minThickness, 
                          TacsScalar maxThickness)
 
+cdef extern from "MaterialProperties.h":
+    cdef cppclass OrthoPly(TACSObject):
+        OrthoPly( TacsScalar _plyThickness, TacsScalar _rho,
+	    TacsScalar _E1, TacsScalar _E2, TacsScalar _nu12,
+	    TacsScalar _G12, TacsScalar _G23, TacsScalar _G13,
+	    TacsScalar _Xt, TacsScalar _Xc, TacsScalar _Yt, TacsScalar _Yc,
+	    TacsScalar _S12, TacsScalar C)
+        OrthoPly( TacsScalar _plyThickness, TacsScalar _rho,
+                    TacsScalar E, TacsScalar nu, TacsScalar ys )
+
+# This is Tim's updated implementation for orthotropic laminates without stiffeners, we don't currently have the corresponding src files so it is omitted for now
+# cdef extern from "smearedFSDTStiffness.h":
+#     cdef cppclass smearedFSDTStiffness(FSDTStiffness):
+#         smearedFSDTStiffness( OrthoPly **_ortho_ply,
+# 				      TacsScalar _kcorr,
+# 				      TacsScalar _thickness, int _tNum,
+#                                     TacsScalar _minThickness,
+# 				      TacsScalar _maxThickness,
+# 				      TacsScalar *_ply_angles,
+#                                     TacsScalar *_ply_fractions,
+# 				      int _num_plies )
+
+cdef extern from "bladeFSDTStiffness.h":
+    cdef cppclass bladeFSDTStiffness(FSDTStiffness):
+        bladeFSDTStiffness( OrthoPly * _ortho_ply, TacsScalar _kcorr,
+                      TacsScalar _Lx, int _Lx_num,
+                      TacsScalar _sp, int _sp_num,
+                      TacsScalar _sh, int _sh_num,
+                      TacsScalar _st, int _st_num,
+                      TacsScalar _t, int _t_num,
+                      int _pf_nums[], int _stiff_pf_nums[] )
+        void setStiffenerPitchBounds( TacsScalar _sp_low, TacsScalar _sp_high )
+        void setStiffenerHeightBounds( TacsScalar _sh_low, TacsScalar _sh_high )
+        void setStiffenerThicknessBounds( TacsScalar _st_low, TacsScalar _st_high )
+        void setThicknessBounds( TacsScalar _t_low, TacsScalar _t_high )
+        void setStiffenerPlyFractions( TacsScalar _pf[] )
+        void setPlyFractions( TacsScalar _pf[] )
+
 cdef extern from "TimoshenkoStiffness.h":
     cdef cppclass TimoshenkoStiffness(TACSConstitutive):
         
@@ -60,6 +100,36 @@ cdef extern from "TimoshenkoStiffness.h":
         TimoshenkoStiffness(TacsScalar, TacsScalar, TacsScalar, TacsScalar,
                             TacsScalar, TacsScalar, TacsScalar, TacsScalar,
                             TacsScalar, TacsScalar, const TacsScalar*)
+
+# cdef extern from "EBStiffness.h":
+#     enum EBReferenceDirection"EBStiffness::EBReferenceDirection":
+#         STRONG_AXIS"EBStiffness::STRONG_AXIS"
+#         WEAK_AXIS"EBStiffness::WEAK_AXIS"
+
+#     cdef cppclass EBStiffness(TACSConstitutive):
+#         EBStiffness(TacsScalar rho, TacsScalar E, TacsScalar G,
+#                     TacsScalar A, TacsScalar Ix, TacsScalar Iy, TacsScalar J,
+#                     TacsScalar _ref_dir[3],
+#                     EBReferenceDirection _ref_type)
+
+#         void getStiffness( const double pt[], TacsScalar Ct[] )
+
+#         const EBReferenceDirection getRefType()
+
+#         const TacsScalar *getRefDir()
+
+# Tim's smearedFSDT class which is not implemented yet
+# cdef extern from "rectangleEBStiffness.h":
+#   cdef cppclass rectangleEBStiffness(EBStiffness):
+#       rectangleEBStiffness(TacsScalar _rho, TacsScalar _E, TacsScalar _G,
+#                            TacsScalar _yield_stress,
+#                            TacsScalar _thickness, TacsScalar _width,
+#                            int _thickness_num, int _width_num,
+#                            TacsScalar _ref_dir[3],
+#                            EBReferenceDirection _ref_type,
+#                            bool z_offset, bool y_offset)
+#       void setWidthBounds( TacsScalar, TacsScalar );
+#       void setThicknessBounds( TacsScalar, TacsScalar );
 
 cdef extern from "PlaneStressStiffness.h":
     cdef cppclass PlaneStressStiffness(TACSConstitutive):
@@ -130,6 +200,9 @@ cdef extern from "TACSConstitutiveWrapper.h":
 cdef class Timoshenko(Constitutive):
     pass
 
+# cdef class EBStiff(Constitutive):
+#     pass
+
 cdef class FSDT(Constitutive):
     pass
 
@@ -147,8 +220,11 @@ cdef class CoupledSolid(Constitutive):
 
 # Special functions required for converting pointers
 cdef extern from "":
+    # EBStiffness* _dynamicEB"dynamic_cast<EBStiffness*>"(TACSConstitutive*)
+    # rectangleEBStiffness* _dynamicRectangle"dynamic_cast<rectangleEBStiffness*>"(TACSConstitutive*)
     PlaneStressStiffness* _dynamicPlaneStress"dynamic_cast<PlaneStressStiffness*>"(TACSConstitutive*)
     FSDTStiffness* _dynamicFSDT"dynamic_cast<FSDTStiffness*>"(TACSConstitutive*)
+    bladeFSDTStiffness* _dynamicBlade"dynamic_cast<bladeFSDTStiffness*>"(TACSConstitutive*)
     SolidStiffness* _dynamicSolid"dynamic_cast<SolidStiffness*>"(TACSConstitutive*)
     TimoshenkoStiffness* _dynamicTimoshenko"dynamic_cast<TimoshenkoStiffness*>"(TACSConstitutive*)
     CoupledThermoPlaneStressStiffness* _dynamicPSThermo"dynamic_cast<CoupledThermoPlaneStressStiffness*>"(TACSConstitutive*)

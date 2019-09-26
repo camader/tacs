@@ -38,3 +38,4 @@ extern/
 tacs/*.cpp
 *.pxi
 *.vtk
+tacs.egg-info*
