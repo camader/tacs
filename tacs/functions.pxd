@@ -113,7 +113,7 @@ cdef extern from "ThermalKSFailure.h":
 cdef extern from "HeatFlux.h":
     cdef cppclass HeatFluxIntegral( TACSFunction ):
         HeatFluxIntegral( TACSAssembler*, int*, int*, int )
-        
+
 cdef extern from "KSTemperature.h":
     enum KSTemperatureType"KSTemperature::KSFailureType":
         KS_TEMP_DISCRETE"TACSKSTemperature::DISCRETE"

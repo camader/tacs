@@ -50,6 +50,7 @@ class EBStiffness : public TACSConstitutive {
   // -----------------------------------
   const EBReferenceDirection ref_type;
   const TacsScalar *getRefDir(){ return ref_dir; }
+  enum EBReferenceDirection getRefType(){ return ref_type; }
 
   // Retrieve the stiffness
   // ----------------------
