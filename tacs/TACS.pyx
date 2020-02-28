@@ -686,6 +686,14 @@ cdef class KSM:
         if gmres_ptr != NULL:
             gmres_ptr.setTimeMonitor()
 
+    def getIterCount(self):
+        '''
+        Return the number of iterations taken for the linear solve
+        '''
+        cdef GMRES *gmres_ptr = NULL
+        gmres_ptr = _dynamicGMRES(self.ptr)
+        if gmres_ptr != NULL:
+            return gmres_ptr.getIterCount()
 
 cdef class Assembler:
     def __cinit__(self):
