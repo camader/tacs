@@ -7,8 +7,8 @@
 #  TACS is licensed under the Apache License, Version 2.0 (the
 #  "License"); you may not use this software except in compliance with
 #  the License.  You may obtain a copy of the License at
-#  
-#  http://www.apache.org/licenses/LICENSE-2.0 
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
 
 # distutils: language=c++
 
@@ -20,8 +20,6 @@ cimport mpi4py.MPI as MPI
 import numpy as np
 cimport numpy as np
 from libc.string cimport const_char
-# Only required for Tim's rectangleEBStiffness class which is not implemented yet
-# from libcpp cimport bool 
 
 # Import C methods for python
 from cpython cimport PyObject, Py_INCREF
@@ -38,10 +36,10 @@ cdef extern from "FSDTStiffness.h":
 
 cdef extern from "isoFSDTStiffness.h":
     cdef cppclass isoFSDTStiffness(FSDTStiffness):
-        isoFSDTStiffness(TacsScalar rho, TacsScalar E, TacsScalar nu, 
-                         TacsScalar kcorr, TacsScalar yieldStress, 
+        isoFSDTStiffness(TacsScalar rho, TacsScalar E, TacsScalar nu,
+                         TacsScalar kcorr, TacsScalar yieldStress,
                          TacsScalar thickness, int tNum,
-                         TacsScalar minThickness, 
+                         TacsScalar minThickness,
                          TacsScalar maxThickness)
 
 cdef extern from "MaterialProperties.h":
@@ -53,18 +51,6 @@ cdef extern from "MaterialProperties.h":
 	    TacsScalar _S12, TacsScalar C)
         OrthoPly( TacsScalar _plyThickness, TacsScalar _rho,
                     TacsScalar E, TacsScalar nu, TacsScalar ys )
-
-# This is Tim's updated implementation for orthotropic laminates without stiffeners, we don't currently have the corresponding src files so it is omitted for now
-# cdef extern from "smearedFSDTStiffness.h":
-#     cdef cppclass smearedFSDTStiffness(FSDTStiffness):
-#         smearedFSDTStiffness( OrthoPly **_ortho_ply,
-# 				      TacsScalar _kcorr,
-# 				      TacsScalar _thickness, int _tNum,
-#                                     TacsScalar _minThickness,
-# 				      TacsScalar _maxThickness,
-# 				      TacsScalar *_ply_angles,
-#                                     TacsScalar *_ply_fractions,
-# 				      int _num_plies )
 
 cdef extern from "bladeFSDTStiffness.h":
     cdef cppclass bladeFSDTStiffness(FSDTStiffness):
@@ -84,9 +70,9 @@ cdef extern from "bladeFSDTStiffness.h":
 
 cdef extern from "TimoshenkoStiffness.h":
     cdef cppclass TimoshenkoStiffness(TACSConstitutive):
-        
+
         ## TimoshenkoStiffness(const TacsScalar* axis,
-        ##                     TacsScalar EA, 
+        ##                     TacsScalar EA,
         ##                     TacsScalar EI22, TacsScalar EI33, TacsScalar EI23,
         ##                     TacsScalar GJ,
         ##                     TacsScalar kG22, TacsScalar kG33, TacsScalar kG23,
@@ -96,40 +82,10 @@ cdef extern from "TimoshenkoStiffness.h":
         ##                     TacsScalar xc2, TacsScalar xc3,
         ##                     TacsScalar xk2, TacsScalar xk3,
         ##                     TacsScalar muS);
-                       
+
         TimoshenkoStiffness(TacsScalar, TacsScalar, TacsScalar, TacsScalar,
                             TacsScalar, TacsScalar, TacsScalar, TacsScalar,
                             TacsScalar, TacsScalar, const TacsScalar*)
-
-# cdef extern from "EBStiffness.h":
-#     enum EBReferenceDirection"EBStiffness::EBReferenceDirection":
-#         STRONG_AXIS"EBStiffness::STRONG_AXIS"
-#         WEAK_AXIS"EBStiffness::WEAK_AXIS"
-
-#     cdef cppclass EBStiffness(TACSConstitutive):
-#         EBStiffness(TacsScalar rho, TacsScalar E, TacsScalar G,
-#                     TacsScalar A, TacsScalar Ix, TacsScalar Iy, TacsScalar J,
-#                     TacsScalar _ref_dir[3],
-#                     EBReferenceDirection _ref_type)
-
-#         void getStiffness( const double pt[], TacsScalar Ct[] )
-
-#         const EBReferenceDirection getRefType()
-
-#         const TacsScalar *getRefDir()
-
-# Tim's smearedFSDT class which is not implemented yet
-# cdef extern from "rectangleEBStiffness.h":
-#   cdef cppclass rectangleEBStiffness(EBStiffness):
-#       rectangleEBStiffness(TacsScalar _rho, TacsScalar _E, TacsScalar _G,
-#                            TacsScalar _yield_stress,
-#                            TacsScalar _thickness, TacsScalar _width,
-#                            int _thickness_num, int _width_num,
-#                            TacsScalar _ref_dir[3],
-#                            EBReferenceDirection _ref_type,
-#                            bool z_offset, bool y_offset)
-#       void setWidthBounds( TacsScalar, TacsScalar );
-#       void setThicknessBounds( TacsScalar, TacsScalar );
 
 cdef extern from "PlaneStressStiffness.h":
     cdef cppclass PlaneStressStiffness(TACSConstitutive):
@@ -141,7 +97,7 @@ cdef extern from "CoupledThermoPlaneStressStiffness.h":
         CoupledThermoPlaneStressStiffness()
         CoupledThermoPlaneStressStiffness( TacsScalar, TacsScalar, TacsScalar,
                                            TacsScalar, TacsScalar, TacsScalar )
-        
+
 cdef extern from "SolidStiffness.h":
     cdef cppclass SolidStiffness(TACSConstitutive):
         SolidStiffness()
@@ -161,7 +117,7 @@ cdef extern from "TACSConstitutiveWrapper.h":
         void (*setdesignvars)(void*, const TacsScalar*, int)
         void (*getdesignvars)(void*, TacsScalar*, int)
         void (*getdesignvarrange)(void*, TacsScalar*, TacsScalar*, int)
-        void (*calculatestress)(void*, const double*, 
+        void (*calculatestress)(void*, const double*,
                                 const TacsScalar*, TacsScalar*)
         void (*addstressdvsens)(void*, const double*, const TacsScalar*,
                                 TacsScalar, const TacsScalar*,
@@ -172,7 +128,7 @@ cdef extern from "TACSConstitutiveWrapper.h":
         TacsScalar (*fail)(void*, const double*, const TacsScalar*)
         void (*failstrainsens)(void*, const double*,
                                const TacsScalar*, TacsScalar*)
-        void (*addfaildvsens)(void*, const double*, const TacsScalar*, 
+        void (*addfaildvsens)(void*, const double*, const TacsScalar*,
                               TacsScalar, TacsScalar*, int)
 
     cdef cppclass FSDTStiffnessWrapper(FSDTStiffness):
@@ -182,7 +138,7 @@ cdef extern from "TACSConstitutiveWrapper.h":
         void (*setdesignvars)(void*, const TacsScalar*, int)
         void (*getdesignvars)(void*, TacsScalar*, int)
         void (*getdesignvarrange)(void*, TacsScalar*, TacsScalar*, int)
-        TacsScalar (*getstiffness)(void*, const double*, 
+        TacsScalar (*getstiffness)(void*, const double*,
                                    TacsScalar*, TacsScalar*,
                                    TacsScalar*, TacsScalar*)
         void (*addstiffnessdvsens)(void*, const double*, const TacsScalar*,
@@ -194,21 +150,18 @@ cdef extern from "TACSConstitutiveWrapper.h":
         TacsScalar (*fail)(void*, const double*, const TacsScalar*)
         void (*failstrainsens)(void*, const double*,
                                const TacsScalar*, TacsScalar*)
-        void (*addfaildvsens)(void*, const double*, const TacsScalar*, 
+        void (*addfaildvsens)(void*, const double*, const TacsScalar*,
                               TacsScalar, TacsScalar*, int)
 
 cdef class Timoshenko(Constitutive):
     pass
-
-# cdef class EBStiff(Constitutive):
-#     pass
 
 cdef class FSDT(Constitutive):
     pass
 
 cdef class PlaneStress(Constitutive):
     pass
-   
+
 cdef class SolidStiff(Constitutive):
     pass
 
@@ -220,8 +173,6 @@ cdef class CoupledSolid(Constitutive):
 
 # Special functions required for converting pointers
 cdef extern from "":
-    # EBStiffness* _dynamicEB"dynamic_cast<EBStiffness*>"(TACSConstitutive*)
-    # rectangleEBStiffness* _dynamicRectangle"dynamic_cast<rectangleEBStiffness*>"(TACSConstitutive*)
     PlaneStressStiffness* _dynamicPlaneStress"dynamic_cast<PlaneStressStiffness*>"(TACSConstitutive*)
     FSDTStiffness* _dynamicFSDT"dynamic_cast<FSDTStiffness*>"(TACSConstitutive*)
     bladeFSDTStiffness* _dynamicBlade"dynamic_cast<bladeFSDTStiffness*>"(TACSConstitutive*)

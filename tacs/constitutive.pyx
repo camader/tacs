@@ -7,8 +7,8 @@
 #  TACS is licensed under the Apache License, Version 2.0 (the
 #  "License"); you may not use this software except in compliance with
 #  the License.  You may obtain a copy of the License at
-#  
-#  http://www.apache.org/licenses/LICENSE-2.0 
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
 
 # distutils: language=c++
 
@@ -16,7 +16,7 @@
 from mpi4py.libmpi cimport *
 cimport mpi4py.MPI as MPI
 
-# Import numpy 
+# Import numpy
 import numpy as np
 cimport numpy as np
 
@@ -32,9 +32,6 @@ from cpython cimport PyObject, Py_INCREF
 # Import the definitions
 from TACS cimport *
 from constitutive cimport *
-
-# Only required for Tim's smearedFSDT class which is not implemented yet
-# from libc.stdlib cimport malloc, free
 
 # Include the definitions
 include "TacsDefs.pxi"
@@ -53,12 +50,12 @@ cdef inplace_array_1d(int nptype, int dim1, void *data_ptr):
 
     # Set the first entry of the shape array
     shape[0] = <np.npy_intp>dim1
-        
+
     # Create the array itself - Note that this function will not
     # delete the data once the ndarray goes out of scope
     ndarray = np.PyArray_SimpleNewFromData(size, shape,
                                            nptype, data_ptr)
-    
+
     return ndarray
 
 cdef class Timoshenko(Constitutive):
@@ -70,7 +67,7 @@ cdef class Timoshenko(Constitutive):
     ##               xm2, xm3,
     ##               xc2, xc3,
     ##               xk2, xk3,
-    ##               muS):        
+    ##               muS):
     ##     self.ptr = new TimoshenkoStiffness(<TacsScalar*>axis.data,
     ##                                        EA, EIy, EIz, EIyz,
     ##                                        GJ, kGy, kGz, kGyz,
@@ -80,7 +77,7 @@ cdef class Timoshenko(Constitutive):
     ##                                        xk2, xk3,
     ##                                        muS)
     ##     return
-                  
+
     def __cinit__(self, rhoA, rhoIy, rhoIz, rhoIyz,
                       EA, GJ, EIy, EIz, kGAy, kGAz,
                       np.ndarray[TacsScalar, ndim=1, mode='c'] axis):
@@ -88,88 +85,6 @@ cdef class Timoshenko(Constitutive):
                                            EA, GJ, EIy, EIz, kGAy, kGAz,
                                            <TacsScalar*>axis.data)
         return
-
-# From Tim's implementation, doesn't work at the moment
-# cdef class EBStiff(Constitutive):
-#     def __cinit__(self, *args, **kwargs):
-#          self.ptr = NULL
-#          return
-
-#     def getStiffness(self, double pt,
-#                      np.ndarray[TacsScalar, ndim=2, mode='c'] Ct):
-
-#         cdef np.ndarray _Ct = np.zeros(10)
-
-#         cdef EBStiffness *stiff = NULL
-#         stiff = _dynamicEB(self.ptr)
-
-#         stiff.getStiffness(&pt, <TacsScalar*>_Ct.data)
-
-#         Ct[:,:] = [[_Ct[0], _Ct[1], _Ct[2], _Ct[3]],
-#                   [_Ct[1], _Ct[4], _Ct[5], _Ct[6]],
-#                   [_Ct[2], _Ct[5], _Ct[7], _Ct[8]],
-#                   [_Ct[3], _Ct[6], _Ct[8], _Ct[9]]]
-
-#     def getRefType(self):
-#         cdef EBStiffness *stiff = NULL
-#         stiff = _dynamicEB(self.ptr)
-#         cdef EBReferenceDirection ref_type = stiff.getRefType()
-
-#         if ref_type == WEAK_AXIS:
-#              return 'WEAK_AXIS'
-
-#         elif ref_type == STRONG_AXIS:
-#              return 'STRONG_AXIS'
-
-#     def getRefDir(self):
-#         cdef const TacsScalar* ref_dir
-#         cdef EBStiffness *stiff = NULL
-#         stiff = _dynamicEB(self.ptr)
-#         ref_dir = stiff.getRefDir()
-#         return np.array([ref_dir[0], ref_dir[1], ref_dir[2]])
-
-# cdef class EulerBernoulli(EBStiff):
-#     def __cinit__(self, rho, E, G,
-#                     A, Ix, Iy, J,
-#                     np.ndarray[TacsScalar, ndim=1, mode='c'] ref_dir,
-#                     ref_type='weak'):
-
-#         if ref_type.upper() == 'WEAK' or ref_type.upper() == 'WEAK_AXIS':
-#             _ref_type = WEAK_AXIS
-#         elif ref_type.upper() == 'STRONG' or ref_type.upper() == 'STRONG_AXIS':
-#             _ref_type = STRONG_AXIS
-#         else:
-#             errmsg = 'ref_type must be either "WEAK" or "STRONG"'
-#             raise ValueError(errmsg)
-#         self.ptr = new EBStiffness(rho, E, G, A, Ix, Iy, J,
-#                         <TacsScalar*>ref_dir.data, _ref_type)
-#         return
-
-# Tim's smearedFSDT class which is not implemented yet
-# cdef class RectangleEB(EBStiff):
-#     def __cinit__(self, rho, E, G, yield_stress,
-#                   thickness, width, thickness_num, width_num,
-#                   np.ndarray[TacsScalar, ndim=1, mode='c'] ref_dir,
-#                   ref_type='weak',
-#                   z_offset=False, y_offset=False):
-
-#         if ref_type.upper() == 'WEAK' or ref_type.upper() == 'WEAK_AXIS':
-#             _ref_type = WEAK_AXIS
-#         elif ref_type.upper() == 'STRONG' or ref_type.upper() == 'STRONG_AXIS':
-#             _ref_type = STRONG_AXIS
-#         else:
-#             errmsg = 'ref_type must be either "WEAK" or "STRONG"'
-#             raise ValueError(errmsg)
-#         self.ptr = new rectangleEBStiffness(rho, E, G, yield_stress, thickness,
-#                                             width, thickness_num,
-#                                             width_num,
-#                                             <TacsScalar*>ref_dir.data, _ref_type,
-#                                             z_offset, y_offset)
-#     def setThicknessBounds(self, lb, ub):
-#         _dynamicRectangle(self.ptr).setThicknessBounds(lb, ub)
-
-#     def setWidthBounds(self, lb, ub):
-#         _dynamicRectangle(self.ptr).setWidthBounds(lb, ub)
 
 cdef class FSDT(Constitutive):
     def __cinit__(self, *args, **kwargs):
@@ -237,32 +152,6 @@ cdef class isoPly(Ply):
         self.ptr.incref()
         return
 
-# This is Tim's updated implementation for orthotropic laminates without stiffeners, we don't currently have the corresponding src files so it is omitted for now
-# cdef class smearedFSDT(FSDT):
-#     def __cinit__(self, list _ortho_ply, kcorr, thickness, tNum, minThickness,
-#                   maxThickness, np.ndarray[TacsScalar, ndim=1, mode='c'] ply_angles,
-#                   np.ndarray[TacsScalar, ndim=1, mode='c'] ply_fractions):
-#         '''
-#         Wraps the smearedFSDTStiffness class that is used with shell elements
-#         '''
-#         # Allocate the array of OrthoPly pointers
-#         num_plies = len(ply_fractions)
-#         cdef OrthoPly **ortho_ply
-#         ortho_ply = <OrthoPly**>malloc(len(_ortho_ply)*sizeof(OrthoPly*))
-#         for i in range(len(_ortho_ply)):
-#             if _ortho_ply[i] is None:
-#                 ortho_ply[i] = NULL
-#             else:
-#                 ortho_ply[i] = (<Ply>_ortho_ply[i]).ptr
-#                 ortho_ply[i].incref()
-
-#         self.ptr = new smearedFSDTStiffness(ortho_ply, kcorr, thickness, tNum, minThickness,
-#                   maxThickness, <TacsScalar*>ply_angles.data, <TacsScalar*>ply_fractions.data, num_plies)
-#         self.ptr.incref()
-#         # Free ortho_ply array
-#         free(ortho_ply)
-#         return
-
 cdef class bladeFSDT(FSDT):
     def __cinit__(self, _ortho_ply, kcorr,
                       Lx, Lx_num,
@@ -314,7 +203,7 @@ cdef class CoupledSolid(Constitutive):
     def __cinit__(self, *args, **kwargs):
         self.ptr = NULL
         return
-    
+
 cdef class SimplePlaneStress(PlaneStress):
     def __cinit__(self, *args, **kwargs):
         '''
@@ -327,7 +216,7 @@ cdef class SimplePlaneStress(PlaneStress):
             self.ptr = new PlaneStressStiffness(rho, E, nu)
         else:
             self.ptr = new PlaneStressStiffness()
-            
+
         self.ptr.incref()
         return
 
@@ -338,7 +227,7 @@ cdef class SolidStiff(Constitutive):
         '''
         self.ptr = NULL
         return
-    
+
 cdef class isoSolidStiff(SolidStiff):
     def __cinit__(self, rho, E, nu, ys=1.0, eNum=-1, *args, **kwargs):
         '''
@@ -385,7 +274,7 @@ cdef void ps_calculatestress(void *_self, const double *pt,
     p = np.zeros(2)
     p[0] = pt[0]
     p[1] = pt[1]
-    
+
     s = (<object>_self).calculateStress(p, e)
 
     # Conver the stress values
@@ -447,7 +336,7 @@ cdef void ps_addpointwisemassdvsens(void *_self, const double *pt,
     fdvs = inplace_array_1d(np.NPY_DOUBLE, dvLen, <void*>fdvSens)
 
     (<object>_self).addPointwiseMassDVSens(p, ascalar, fdvs)
-    
+
     return
 
 cdef TacsScalar ps_fail(void *_self, const double *pt,
@@ -464,7 +353,7 @@ cdef TacsScalar ps_fail(void *_self, const double *pt,
     p = np.zeros(2)
     p[0] = pt[0]
     p[1] = pt[1]
-    
+
     fval = (<object>_self).failure(p, e)
 
     return fval
@@ -482,7 +371,7 @@ cdef void ps_failstrainsens(void *_self, const double *pt,
     p = np.zeros(2)
     p[0] = pt[0]
     p[1] = pt[1]
-    
+
     fsens = (<object>_self).failureStrainSens(p, e)
 
     sens[0] = fsens[0]
@@ -491,7 +380,7 @@ cdef void ps_failstrainsens(void *_self, const double *pt,
     return
 
 cdef void ps_addfaildvsens(void *_self, const double *pt,
-                           const TacsScalar *strain, 
+                           const TacsScalar *strain,
                            TacsScalar alpha,
                            TacsScalar *fdvSens, int dvLen):
     # Extract the strain
@@ -507,7 +396,7 @@ cdef void ps_addfaildvsens(void *_self, const double *pt,
 
     # Wrap the python array
     fdvs = inplace_array_1d(np.NPY_DOUBLE, dvLen, <void*>fdvSens)
-    
+
     (<object>_self).addFailureDVSens(p, e, alpha, fdvs)
 
     return
@@ -518,7 +407,7 @@ cdef class pyPlaneStress(PlaneStress):
         cdef PSStiffnessWrapper *pointer
         pointer = new PSStiffnessWrapper(<PyObject*>self)
         pointer.incref()
-        
+
         # Set the function pointers
         pointer.setdesignvars = setdesignvars
         pointer.getdesignvars = getdesignvars
@@ -591,7 +480,7 @@ cdef TacsScalar fsdt_getstiffness(void *_self, const double *pt,
     as[0] = As[0]
     as[1] = As[1]
     as[2] = As[2]
-    
+
     return rot
 
 cdef void fsdt_addstiffnessdvsens(void *_self, const double *pt,
@@ -606,7 +495,7 @@ cdef void fsdt_addstiffnessdvsens(void *_self, const double *pt,
     cdef np.ndarray ps = np.zeros(8)
     for i in range(8):
         ps[i] = psi[i]
-        
+
     # Extract the parametric point
     cdef np.ndarray p = np.zeros(2)
     p[0] = pt[0]
@@ -650,7 +539,7 @@ cdef void fsdt_addpointwisemassdvsens(void *_self, const double *pt,
     fdvs = inplace_array_1d(TACS_NPY_SCALAR, dvLen, <void*>fdvSens)
 
     (<object>_self).addPointwiseMassDVSens(p, avals, fdvs)
-    
+
     return
 
 cdef TacsScalar fsdt_fail(void *_self, const double *pt,
@@ -661,12 +550,12 @@ cdef TacsScalar fsdt_fail(void *_self, const double *pt,
     cdef np.ndarray e = np.zeros(8)
     for i in range(8):
         e[i] = strain[i]
-        
+
     # Extract the parametric point
     cdef np.ndarray p = np.zeros(2)
     p[0] = pt[0]
     p[1] = pt[1]
-    
+
     fval = (<object>_self).failure(p, e)
 
     return fval
@@ -683,7 +572,7 @@ cdef void fsdt_failstrainsens(void *_self, const double *pt,
     cdef np.ndarray p = np.zeros(2)
     p[0] = pt[0]
     p[1] = pt[1]
-    
+
     fsens = (<object>_self).failureStrainSens(p, e)
 
     for i in range(8):
@@ -692,14 +581,14 @@ cdef void fsdt_failstrainsens(void *_self, const double *pt,
     return
 
 cdef void fsdt_addfaildvsens(void *_self, const double *pt,
-                             const TacsScalar *strain, 
+                             const TacsScalar *strain,
                              TacsScalar alpha,
                              TacsScalar *fdvSens, int dvLen):
     # Extract the strain
     cdef np.ndarray e = np.zeros(8)
     for i in range(8):
         e[i] = strain[i]
-    
+
     # Extract the parametric point
     cdef np.ndarray p = np.zeros(2)
     p[0] = pt[0]
@@ -707,7 +596,7 @@ cdef void fsdt_addfaildvsens(void *_self, const double *pt,
 
     # Wrap the python array
     fdvs = inplace_array_1d(TACS_NPY_SCALAR, dvLen, <void*>fdvSens)
-    
+
     (<object>_self).addFailureDVSens(p, e, alpha, fdvs)
 
     return
@@ -718,7 +607,7 @@ cdef class pyFSDT(FSDT):
         cdef FSDTStiffnessWrapper *pointer
         pointer = new FSDTStiffnessWrapper(<PyObject*>self)
         pointer.incref()
-        
+
         # Set the function pointers
         pointer.setdesignvars = setdesignvars
         pointer.getdesignvars = getdesignvars
