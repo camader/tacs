@@ -129,6 +129,7 @@ cdef extern from "KSM.h":
         GMRES(TACSMat *_mat, TACSPc *_pc, int _m,
               int _nrestart, int _isFlexible )
         void setTimeMonitor()
+        int getIterCount()
 
 cdef extern from "BVec.h":
     cdef cppclass TACSBVec(TACSVec):
@@ -254,6 +255,7 @@ cdef extern from "TACSElement.h":
     cdef cppclass TACSElement(TACSObject):
         int numNodes()
         int numVariables()
+        int getComponentNum()
         void setComponentNum(int)
         TACSConstitutive *getConstitutive()
 

@@ -779,7 +779,7 @@ void GMRES::solve( TACSVec *b, TACSVec *x, int zero_guess ){
       rhs_norm = res[0]; // The initial residual 
     }  
 
-    int niters = 0; // Keep track of the size of the Hessenberg matrix  
+    niters = 0; // Keep track of the size of the Hessenberg matrix  
 
     if (TacsRealPart(res[0]) < atol){
       break;
