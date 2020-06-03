@@ -76,12 +76,12 @@ class TACSMg : public TACSPc {
   // ------------------------------------------------------
   void assembleJacobian( double alpha, double beta, double gamma,
                          TACSBVec *res=NULL, 
-                         MatrixOrientation matOr=NORMAL );
+                         MatrixOrientation matOr=NORMAL, int applyBC=1 );
   void assembleMatType( ElementMatrixType matType=STIFFNESS_MATRIX, 
-                        MatrixOrientation matOr=NORMAL );
+                        MatrixOrientation matOr=NORMAL, int applyBC=1 );
   void assembleMatCombo( ElementMatrixType matTypes[],
                          TacsScalar scale[], int nmats,
-                         MatrixOrientation matOr=NORMAL );
+                         MatrixOrientation matOr=NORMAL, int applyBC=1 );
 
   // Methods required by the TACSPc class
   // ------------------------------------

@@ -244,9 +244,9 @@ cdef extern from "TACSMg.h":
                       TACSMat*, TACSPc*)
         void setVariables(TACSBVec*)
         void assembleJacobian(double, double, double, TACSBVec*,
-                              MatrixOrientation)
+                              MatrixOrientation, int)
         void assembleMatType(ElementMatrixType,
-                             MatrixOrientation)
+                             MatrixOrientation,int)
         void setMonitor(KSMPrint*)
 
 cdef extern from "TACSElement.h":
@@ -437,9 +437,9 @@ cdef extern from "TACSAssembler.h":
         void assembleRes(TACSBVec *residual)
         void assembleJacobian(double alpha, double beta, double gamma,
                               TACSBVec *residual, TACSMat *A,
-                              MatrixOrientation matOr)
+                              MatrixOrientation matOr, int applyBC)
         void assembleMatType(ElementMatrixType matType,
-                             TACSMat *A, MatrixOrientation matOr)
+                             TACSMat *A, MatrixOrientation matOr, int applyBC)
         void addJacobianVecProduct(TacsScalar scale,
                                    double alpha, double beta, double gamma,
                                    TACSBVec *x, TACSBVec *y,

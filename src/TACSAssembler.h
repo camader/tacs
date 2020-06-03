@@ -194,12 +194,15 @@ class TACSAssembler : public TACSObject {
   void assembleRes( TACSBVec *residual );
   void assembleJacobian( double alpha, double beta, double gamma,
                          TACSBVec *residual, TACSMat *A,
-                         MatrixOrientation matOr=NORMAL );
+                         MatrixOrientation matOr=NORMAL,
+			 int applyBC=1);
   void assembleMatType( ElementMatrixType matType,
-                        TACSMat *A, MatrixOrientation matOr=NORMAL );
+                        TACSMat *A, MatrixOrientation matOr=NORMAL,
+			int applyBC=1);
   void assembleMatCombo( ElementMatrixType matTypes[],
                          TacsScalar scale[], int nmats,
-                         TACSMat *A, MatrixOrientation matOr=NORMAL );
+                         TACSMat *A, MatrixOrientation matOr=NORMAL,
+			 int applyBC=1);
   void addJacobianVecProduct( TacsScalar scale, 
                               double alpha, double beta, double gamma,
                               TACSBVec *x, TACSBVec *y,

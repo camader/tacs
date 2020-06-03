@@ -3527,7 +3527,8 @@ void TACSAssembler::assembleJacobian( double alpha, double beta,
                                       double gamma,
                                       TACSBVec *residual,
                                       TACSMat *A,
-                                      MatrixOrientation matOr ){
+                                      MatrixOrientation matOr,
+				      int applyBC ){
   // Zero the residual and the matrix
   if (residual){
     residual->zeroEntries();
@@ -3642,10 +3643,12 @@ void TACSAssembler::assembleJacobian( double alpha, double beta,
   }
 
   // Apply the boundary conditions
-  if (residual){
-    residual->applyBCs(bcMap, varsVec);
+  if (applyBC){
+    if (residual){
+      residual->applyBCs(bcMap, varsVec);
+    }
+    A->applyBCs(bcMap);
   }
-  A->applyBCs(bcMap);
 }
 
 /*!
@@ -3659,7 +3662,8 @@ void TACSAssembler::assembleJacobian( double alpha, double beta,
 */
 void TACSAssembler::assembleMatType( ElementMatrixType matType,
                                      TACSMat *A,
-                                     MatrixOrientation matOr ){
+                                     MatrixOrientation matOr,
+				     int applyBC){
   // Zero the matrix
   A->zeroEntries();
 
@@ -3714,7 +3718,9 @@ void TACSAssembler::assembleMatType( ElementMatrixType matType,
 
   A->beginAssembly();
   A->endAssembly();
-  A->applyBCs(bcMap);
+  if (applyBC){
+    A->applyBCs(bcMap);
+  }
 }
 
 /*!
@@ -3733,7 +3739,8 @@ void TACSAssembler::assembleMatCombo( ElementMatrixType matTypes[],
                                       TacsScalar scale[],
                                       int nmats,
                                       TACSMat *A,
-                                      MatrixOrientation matOr ){
+                                      MatrixOrientation matOr,
+				      int applyBC){
   // Zero the matrix
   A->zeroEntries();
 
@@ -3768,7 +3775,9 @@ void TACSAssembler::assembleMatCombo( ElementMatrixType matTypes[],
 
   A->beginAssembly();
   A->endAssembly();
-  A->applyBCs(bcMap);
+  if (applyBC){
+    A->applyBCs(bcMap);
+  }
 }
 
 /*

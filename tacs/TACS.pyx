@@ -592,17 +592,17 @@ cdef class Mg(Pc):
 
     def assembleJacobian(self, double alpha, double beta, double gamma,
                          Vec residual=None,
-                         MatrixOrientation matOr=NORMAL):
+                         MatrixOrientation matOr=NORMAL, int applyBC=1):
         '''Assemble the Jacobian for all levels'''
         cdef TACSBVec *res = NULL
         if residual is not None:
             res = residual.ptr
-        self.mg.assembleJacobian(alpha, beta, gamma, res, matOr)
+        self.mg.assembleJacobian(alpha, beta, gamma, res, matOr, applyBC)
         return
 
     def assembleMatType(self, ElementMatrixType matType,
-                        MatrixOrientation matOr):
-        self.mg.assembleMatType(matType, matOr)
+                        MatrixOrientation matOr, int applyBC):
+        self.mg.assembleMatType(matType, matOr, applyBC)
         return
 
     def setMonitor(self, MPI.Comm comm,
@@ -1249,7 +1249,7 @@ cdef class Assembler:
 
     def assembleJacobian(self, double alpha, double beta, double gamma,
                          Vec residual, Mat A,
-                         MatrixOrientation matOr=NORMAL):
+                         MatrixOrientation matOr=NORMAL, int applyBC=1):
         '''
         Assemble the Jacobian matrix
 
@@ -1273,11 +1273,11 @@ cdef class Assembler:
             res = residual.ptr
 
         self.ptr.assembleJacobian(alpha, beta, gamma,
-                                  res, A.ptr, matOr)
+                                  res, A.ptr, matOr, applyBC)
         return
 
     def assembleMatType(self, ElementMatrixType matType,
-                        Mat A, MatrixOrientation matOr):
+                        Mat A, MatrixOrientation matOr, int applyBC):
 
         '''
         Assemble the Jacobian matrix
@@ -1298,7 +1298,7 @@ cdef class Assembler:
         term
         matOr:      the matrix orientation NORMAL or TRANSPOSE
         '''
-        self.ptr.assembleMatType(matType, A.ptr, matOr)
+        self.ptr.assembleMatType(matType, A.ptr, matOr, applyBC)
         return
 
     def evalFunctions(self, funclist):

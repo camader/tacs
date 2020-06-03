@@ -294,25 +294,25 @@ void TACSMg::factor(){
 */
 void TACSMg::assembleJacobian( double alpha, double beta, double gamma,
                                TACSBVec *res,
-                               MatrixOrientation matOr ){
+                               MatrixOrientation matOr, int applyBC ){
   // Assemble the matrices if they are locally owned, otherwise assume
   // that they have already been assembled
   if (tacs[0]){
     tacs[0]->assembleJacobian(alpha, beta, gamma,
-                              res, mat[0], matOr);
+                              res, mat[0], matOr, applyBC);
   }
 
   for ( int i = 1; i < nlevels-1; i++ ){
     if (tacs[i]){
       tacs[i]->assembleJacobian(alpha, beta, gamma,
-                                NULL, mat[i], matOr);
+                                NULL, mat[i], matOr, applyBC);
     }
   }
 
   // Assemble the coarsest problem
   if (tacs[nlevels-1]){
     tacs[nlevels-1]->assembleJacobian(alpha, beta, gamma,
-                                      NULL, root_mat, matOr);
+                                      NULL, root_mat, matOr, applyBC);
   }
 }
 
@@ -321,18 +321,18 @@ void TACSMg::assembleJacobian( double alpha, double beta, double gamma,
   multi-grid level within the problem.
 */
 void TACSMg::assembleMatType( ElementMatrixType matType,
-                              MatrixOrientation matOr ){
+                              MatrixOrientation matOr, int applyBC ){
   // Assemble the matrices if they are locally owned, otherwise assume
   // that they have already been assembled
   for ( int i = 0; i < nlevels-1; i++ ){
     if (tacs[i]){
-      tacs[i]->assembleMatType(matType, mat[i], matOr);
+      tacs[i]->assembleMatType(matType, mat[i], matOr, applyBC);
     }
   }
 
   // Assemble the coarsest problem
   if (tacs[nlevels-1]){
-    tacs[nlevels-1]->assembleMatType(matType, root_mat, matOr);
+    tacs[nlevels-1]->assembleMatType(matType, root_mat, matOr, applyBC);
   }
 }
 
@@ -342,16 +342,17 @@ void TACSMg::assembleMatType( ElementMatrixType matType,
 */
 void TACSMg::assembleMatCombo( ElementMatrixType matTypes[],
                                TacsScalar scale[], int nmats,
-                               MatrixOrientation matOr ){
+                               MatrixOrientation matOr, int applyBC ){
   for ( int i = 0; i < nlevels-1; i++ ){
     if (tacs[i]){
-      tacs[i]->assembleMatCombo(matTypes, scale, nmats, mat[i], matOr);
+      tacs[i]->assembleMatCombo(matTypes, scale, nmats, mat[i], matOr, applyBC);
     }
   }
 
   // Assemble the coarsest problem
   if (tacs[nlevels-1]){
-    tacs[nlevels-1]->assembleMatCombo(matTypes, scale, nmats, root_mat, matOr);
+    tacs[nlevels-1]->assembleMatCombo(matTypes, scale, nmats, root_mat, matOr,
+				      applyBC);
   }
 }
 
